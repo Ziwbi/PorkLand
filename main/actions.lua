@@ -103,7 +103,7 @@ ACTIONS.PANGOLDEN_POOP.fn = function(act)
 end
 
 ACTIONS.THUNDERBIRD_CAST.fn = function(act)
-    inst.sg:GoToState("thunder_attack")
+    act.doer.sg:GoToState("thunder_attack")
     return true
 end
 

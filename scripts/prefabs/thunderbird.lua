@@ -106,9 +106,7 @@ local function fn()
     inst.components.combat.hiteffectsymbol = "body"
 
     inst:AddComponent("health")
-    inst.components.health:SetMaxHealth(TUNING.PERD_HEALTH)
-    inst.components.combat:SetDefaultDamage(TUNING.PERD_DAMAGE)
-    inst.components.combat:SetAttackPeriod(TUNING.PERD_ATTACK_PERIOD)
+    inst.components.health:SetMaxHealth(TUNING.THUNDERBIRD_HEALTH)
 
     inst:AddComponent("lootdropper")
     inst.components.lootdropper:SetLoot(loot)
@@ -125,6 +123,7 @@ local function fn()
     MakeMediumFreezableCharacter(inst, "body")
     MakeMediumBurnableCharacter(inst, "body")
     MakePoisonableCharacter(inst)
+    MakeHauntablePanic(inst)
 
     inst.DoLightning = DoLightning
 

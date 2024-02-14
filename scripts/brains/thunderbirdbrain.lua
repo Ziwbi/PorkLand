@@ -80,7 +80,7 @@ local function LightningAction(inst)
     local target = GetTarget(inst, ATTACK_DIST)
     if ValidateTarget(target) then
         inst.lightning_target = target
-        return BufferedAction(inst, nil, ACTIONS.SPECIAL_ACTION) -- TODO change to a proper name
+        return BufferedAction(inst, nil, ACTIONS.THUNDERBIRD_CAST)
     end
 end
 

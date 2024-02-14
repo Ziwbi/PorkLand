@@ -35,6 +35,9 @@ PrefabFiles = {
     "weevole_carapace",
     "weevole",
     "basefan",
+
+    "thunderbird",
+    "thunderbirdnest"
 }
 
 Assets = {

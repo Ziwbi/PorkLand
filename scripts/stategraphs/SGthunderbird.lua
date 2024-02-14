@@ -15,6 +15,7 @@ local events=
     CommonHandlers.OnSleep(),
     CommonHandlers.OnFreeze(),
     CommonHandlers.OnDeath(),
+    CommonHandlers.OnAttacked(),
 
     EventHandler("cancel_charge", function(inst) inst.sg:GoToState("charge_pst") end),
 
@@ -33,9 +34,6 @@ local events=
         inst:ForceFacePoint(inst.lightning_target.Transform:GetWorldPosition())
         inst.lightning_target = nil
     end),
-
-    EventHandler("attacked", function(inst) if not inst.components.health:IsDead() and not inst.sg:HasStateTag("transform") then inst.sg:GoToState("hit") end end),
-    EventHandler("doattack", function(inst) if not inst.components.health:IsDead() and not inst.sg:HasStateTag("transform") then inst.sg:GoToState("attack") end end),
 }
 
 local states=
@@ -68,7 +66,6 @@ local states=
             inst.sg:GoToState("idle")
         end,
     },
-
 
     State{
         name = "death",

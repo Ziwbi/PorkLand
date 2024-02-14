@@ -159,8 +159,15 @@ local tuning = {
     PANGOLDEN_WALK_SPEED = 2.5,
     PANGOLDEN_RUN_SPEED = 8,
 
+    THUNDERBIRDNEST_RELEASE_TIME = 1,
+    THUNDERBIRDNEST_REGEN_TIME = total_day_time * 5,
+    THUNDERBIRDNEST_MAXCHILDREN = 1,
+    THUNDERBIRDNEST_REGROW_TIME = total_day_time * 3,
+
+    THUNDERBIRD_ENABLED = true,
     THUNDERBIRD_RUN_SPEED = 5.5,
     THUNDERBIRD_WALK_SPEED = 2,
+    THUNDERBIRD_HEALTH = 50,
 }
 
 for key, value in pairs(tuning) do
