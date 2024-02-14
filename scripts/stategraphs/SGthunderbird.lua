@@ -2,8 +2,8 @@ require("stategraphs/commonstates")
 
 local actionhandlers =
 {
-    ActionHandler(ACTIONS.SPECIAL_ACTION, nil),
-    ActionHandler(ACTIONS.PICKUP, "pickup"),
+    ActionHandler(ACTIONS.THUNDERBIRD_CAST, nil),
+    --ActionHandler(ACTIONS.PICKUP, "pickup"),
     ActionHandler(ACTIONS.GOHOME, "gohome"),
 
 }
@@ -156,7 +156,7 @@ local states=
             inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/thunderbird/shoot")
             inst.Physics:Stop()
             inst.AnimState:PlayAnimation("shoot")
-            inst.DoLightning(inst, inst.lightning_target)
+            inst:DoLightning(inst.lightning_target)
         end,
 
         timeline =

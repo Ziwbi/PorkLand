@@ -119,10 +119,6 @@ local function fn()
 
     inst:AddComponent("timer")
 
-    inst.special_action = function (act)
-        inst.sg:GoToState("thunder_attack")
-    end
-
     inst:SetStateGraph("SGthunderbird")
     inst:SetBrain(brain)
 
@@ -149,6 +145,7 @@ local function fx_fn()
 
     inst:AddTag("NOCLICK")
     inst:AddTag("NOBLOCK")
+    inst:AddTag("thunderbird_fx")
 
     inst.AnimState:SetBank("thunderbird_fx")
     inst.AnimState:SetBuild("thunderbird_fx")
@@ -160,23 +157,15 @@ local function fx_fn()
         return inst
     end
 
-    -- inst:DoTaskInTime(math.random(), function()
-    --     local x,y,z = inst.Transform:GetWorldPosition()
-    --     local thunder_bird = FindEntity(inst, 0.5, nil, {"thunderbird"}) 
-
-    --     local ents = TheSim:FindEntities(x,y,z, 0.5)
-    --     local ok = false
-    --     for i, ent in ipairs(ents)do
-
-    --         if ent.prefab == "thunderbird" then
-    --             ok = true
-    --         end
-    --         if not ok then
-    --             ent:Remove()
-    --         end
-    --     end
-
-    -- end)
+    inst:DoTaskInTime(math.random(), function()
+        local x, y, z = inst.Transform:GetWorldPosition()
+        local ents = TheSim:FindEntities(x, y, z, 0.5, {"thunderbird_fx"})
+        for _, v in ipairs(ents)do
+            if v ~= inst then
+                v:Remove()
+            end
+        end
+    end)
 
     return inst
 end

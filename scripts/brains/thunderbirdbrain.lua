@@ -113,25 +113,26 @@ local function ShouldReturnHome(inst)
 end
 
 
+-- Missing animation
 local function PickIronAction(inst)
-    local target = FindEntity(inst, SEE_IRON_DIST,
-        function(item)
-            local x,y,z = item.Transform:GetWorldPosition()
-            local isValidPosition = x and y and z
+    local target = FindEntity(inst, SEE_IRON_DIST, function(item)
+        local x,y,z = item.Transform:GetWorldPosition()
+        local isValidPosition = x and y and z
+        local inventoryitem = item.components.inventoryitem
 
-            local isValidPickupItem =
-                isValidPosition and
-                item.components.inventoryitem and
-                not item.components.inventoryitem:IsHeld() and
-                item.components.inventoryitem.canbepickedup and
-                item:IsOnValidGround() and
-                not item:HasTag("trap") and
-                item.prefab == "iron"
+        local isValidPickupItem =
+            isValidPosition and
+            inventoryitem and
+            not inventoryitem:IsHeld() and
+            inventoryitem.canbepickedup and
+            item:IsOnValidGround() and
+            not item:HasTag("trap") and
+            item.prefab == "iron"
 
-            return isValidPickupItem
-        end)
+        return isValidPickupItem
+    end)
 
-    if target then
+    if target ~= nil then
         return BufferedAction(inst, target, ACTIONS.PICKUP)
     end
 end
@@ -288,124 +289,30 @@ local ThunderbirdBrain = Class(Brain, function(self, inst)
 end)
 
 function ThunderbirdBrain:OnStart()
-
-    local root = PriorityNode(
-    {
+    local root = PriorityNode({
         BrainCommon.PanicTrigger(self.inst),
-
         IfNode(function() return ThreatInAttackRange(self.inst) and not self.inst.cooling_down end, "ThreatInRange",
-            DoAction(self.inst, LightningAction, "ThreatInRange", false )),
+            DoAction(self.inst, LightningAction, "ThreatInRange", false)),
 
         RunAway(self.inst, "scarytoprey", SEE_PLAYER_DIST, STOP_RUN_DIST, function() return RunAwayAction(self.inst) end),
 
-        IfNode (function () return not ThreatInAttackRange(self.inst) and TargetAtChargeDistance(self.inst) end, "Charge",
-            DoAction(self.inst, function() ChargeFn(self.inst) end, "Charging")),
+        IfNode(function() return not ThreatInAttackRange(self.inst) and TargetAtChargeDistance(self.inst) and not self.inst.cooling_down end, "Charge",
+            DoAction(self.inst, ChargeFn, "Charging")),
 
         WhileNode(function() return ShouldReturnHome(self.inst) end, "FarFromHome",
-            DoAction(self.inst, GoHomeAction, "Go Home", false )),
+            DoAction(self.inst, GoHomeAction, "Go Home", false)),
 
-        WhileNode(function () return not TargetAtChargeDistance(self.inst) and TargetAtLookDistance(self.inst) end, "LookAt",
-            DoAction(self.inst, function() LookAtFn(self.inst) end, "Looking")),
+        WhileNode(function() return not TargetAtChargeDistance(self.inst) and TargetAtLookDistance(self.inst) end, "LookAt",
+            DoAction(self.inst, LookAtFn, "Looking")),
 
-        IfNode(function() return IsNestEmpty(self.inst) and not self.inst.is_fleeing and self.inst.components.inventory:NumItems() < 1 end, "PickIron",
-            DoAction(self.inst, PickIronAction, "PickIron", false )),
+        --IfNode(function() return IsNestEmpty(self.inst) and not self.inst.is_fleeing and self.inst.components.inventory:NumItems() < 1 end, "PickIron",
+            --DoAction(self.inst, PickIronAction, "PickIron", false )),
 
-        IfNode(function() return IsNestEmpty(self.inst) and not self.inst.is_fleeing end, "Wander", Wander(self.inst, HomePos, MAX_WANDER_DIST)),
-
+        IfNode(function() return IsNestEmpty(self.inst) and not self.inst.is_fleeing end, "Wander",
+            Wander(self.inst, HomePos, MAX_WANDER_DIST)),
     }, 0.1)
 
     self.bt = BT(self.inst, root)
 end
 
 return ThunderbirdBrain
-
---[[
-
--- local function IsValidGround(pos)
---     local _map = TheWorld.Map
---     if pos then
---         local tile = _map:GetTileAtPoint(pos.x, pos.y, pos.z)
---         return tile ~= WORLD_TILES.IMPASSABLE and tile < WORLD_TILES.UNDERGROUND and not _map:IsVisualGroundAtPoint(pos.x, 0, pos.z)
---     end
---     return false
--- end
-
--- local function FleeAction(inst)
---     local search_for_point = true
---     local pos = nil
-
---     while search_for_point do
---         local rad = math.random(10, 25)
---         local angle = math.random(360)
---         pos = Vector3(inst.Transform:GetWorldPosition()) + Vector3(rad*math.cos(angle), 0, rad*math.sin(angle))
-
---         if IsValidGround(pos) then
---             search_for_point = false
---         end
---     end
-
---     inst.is_fleeing = true
---     if inst.flee_task ~= nil then
---         inst.flee_task:Cancel()
---         inst.flee_task = nil
---     end
---     inst.flee_task = inst:DoTaskInTime(MAX_FLEE_TIME, function() inst.is_fleeing = false end)
-
---     inst.Transform:SetFourFaced()
---     inst.lightning_target = nil
-
---     return BufferedAction(inst, nil, ACTIONS.WALKTO, nil, pos)
--- end
-
-
-
--- Missing animation
--- local function PickIronAction(inst)
---     local target = FindEntity(inst, SEE_IRON_DIST, function(item)
---         local x,y,z = item.Transform:GetWorldPosition()
---         local isValidPosition = x and y and z
---         local inventoryitem = item.components.inventoryitem
-
---         local isValidPickupItem =
---             isValidPosition and
---             inventoryitem and
---             not inventoryitem:IsHeld() and
---             inventoryitem.canbepickedup and
---             item:IsOnValidGround() and
---             not item:HasTag("trap") and
---             item.prefab == "iron"
-
---         return isValidPickupItem
---     end)
-
---     if target ~= nil then
---         return BufferedAction(inst, target, ACTIONS.PICKUP)
---     end
--- end
-
-
-
-function ThunderbirdBrain:OnStart()
-    local root = PriorityNode({
-        BrainCommon.PanicTrigger(self.inst),
-        IfNode(function() return ThreatInAttackRange(self.inst) and not self.inst.cooling_down end, "ThreatInRange",
-            DoAction(self.inst, LightningAction, "ThreatInRange", false)),
-        RunAway(self.inst, "scarytoprey", SEE_PLAYER_DIST, STOP_RUN_DIST, function() return RunAwayAction(self.inst) end),
-        IfNode(function() return not ThreatInAttackRange(self.inst) and TargetAtChargeDistance(self.inst) and not self.inst.cooling_down end, "Charge",
-            DoAction(self.inst, ChargeFn, "Charging")),
-        WhileNode(function() return ShouldReturnHome(self.inst) end, "FarFromHome",
-            DoAction(self.inst, GoHomeAction, "Go Home", false)),
-        WhileNode(function() return not TargetAtChargeDistance(self.inst) and TargetAtLookDistance(self.inst) end, "LookAt",
-            DoAction(self.inst, LookAtFn, "Looking")),
-        --IfNode(function() return IsNestEmpty(self.inst) and not self.inst.is_fleeing and self.inst.components.inventory:NumItems() < 1 end, "PickIron",
-            --DoAction(self.inst, PickIronAction, "PickIron", false )),
-        IfNode(function() return IsNestEmpty(self.inst) and not self.inst.is_fleeing end, "Wander",
-            Wander(self.inst, HomePos, MAX_WANDER_DIST)),
-    }, .1)
-
-    self.bt = BT(self.inst, root)
-end
-
-return ThunderbirdBrain
-
-]]

@@ -9,6 +9,7 @@ local PL_ACTIONS = {
     PANGOLDEN_DRINK = Action({distance = 1.2}),
     PANGOLDEN_POOP = Action({distance = 1.2}),
     PEAGAWK_TRANSFORM = Action({}),
+    THUNDERBIRD_CAST = Action({distance = 1.2}),
 }
 
 for name, ACTION in pairs(PL_ACTIONS) do
@@ -101,6 +102,10 @@ ACTIONS.PANGOLDEN_POOP.fn = function(act)
     return true
 end
 
+ACTIONS.THUNDERBIRD_CAST.fn = function(act)
+    inst.sg:GoToState("thunder_attack")
+    return true
+end
 
 -- Patch for hackable things
 local _FERTILIZEfn = ACTIONS.FERTILIZE.fn
