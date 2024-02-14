@@ -158,6 +158,9 @@ local tuning = {
     PANGOLDEN_BALL_DEFENCE = 0.75,
     PANGOLDEN_WALK_SPEED = 2.5,
     PANGOLDEN_RUN_SPEED = 8,
+
+    THUNDERBIRD_RUN_SPEED = 5.5,
+    THUNDERBIRD_WALK_SPEED = 2,
 }
 
 for key, value in pairs(tuning) do
