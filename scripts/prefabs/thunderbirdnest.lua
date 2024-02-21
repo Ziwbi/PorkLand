@@ -1,7 +1,6 @@
 local assets =
 {
 	Asset("ANIM", "anim/thunderbird_nest.zip"),
-    Asset("MINIMAP_IMAGE", "thunderbirdnest"),
 }
 
 local prefabs =
@@ -70,6 +69,7 @@ local function fn()
     inst.components.childspawner:SetMaxChildren(TUNING.THUNDERBIRDNEST_MAXCHILDREN)
     inst.components.childspawner:SetOnChildKilledFn(OnChildKilledFn)
     inst.components.childspawner:StartSpawning()
+
     WorldSettings_ChildSpawner_SpawnPeriod(inst, TUNING.THUNDERBIRDNEST_RELEASE_TIME, TUNING.THUNDERBIRD_ENABLED)
     WorldSettings_ChildSpawner_RegenPeriod(inst, TUNING.THUNDERBIRDNEST_REGEN_TIME, TUNING.THUNDERBIRD_ENABLED)
     if not TUNING.THUNDERBIRD_ENABLED then

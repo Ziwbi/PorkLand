@@ -72,7 +72,8 @@ local custonsiz_items = {  -- add in dst custonsiz
         },
         animals = {
             pangolden = {image = "pangolden.tex"},
-            peagawk_spawner = {image = "peagawk.tex"}
+            peagawk_spawner = {image = "peagawk.tex"},
+            thunderbirdnest = {image = "thunderbirds.tex"},
         },
         resources = {
             "asparagus",
@@ -90,6 +91,7 @@ local custonsiz_items = {  -- add in dst custonsiz
         animals = {
             peagawk_setting = {image = "peagawk.tex"},
             glowfly_setting = {image = "glowflies.tex"},
+            thunderbird_setting = {image = "thunderbirds.tex"},
         },
         resources = {
             asparagus_regrowth = {image = "asparagus.tex"},

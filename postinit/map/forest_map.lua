@@ -23,6 +23,7 @@ TRANSLATE_TO_PREFABS["grass_tall"] = { "grass_tall" }
 
 TRANSLATE_AND_OVERRIDE["deep_jungle_fern_noise"] = { "deep_jungle_fern_noise", "deep_jungle_fern_noise_plant" }
 TRANSLATE_AND_OVERRIDE["jungle_border_vine"] = { "jungle_border_vine" }
+TRANSLATE_TO_PREFABS["thunderbirdnest"] = {"thunderbirdnest"}
 --TRANSLATE_TO_PREFABS["bermudatriangle"] =    {"bermudatriangle_MARKER"}
 
 local function season_fn(friendly)
