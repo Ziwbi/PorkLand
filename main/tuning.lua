@@ -210,6 +210,24 @@ local tuning = {
 
     VINE_REGEN_TIME_MIN = total_day_time * 2,
     VINE_REGEN_TIME_MAX = total_day_time * 3,
+
+    ROBOT_TARGET_DIST = 15,
+    ROBOT_RIBS_DAMAGE = wilson_attack,
+    ROBOT_RIBS_HEALTH = 1000,
+    ROBOT_LEG_DAMAGE = wilson_attack*2,
+    ROBOT_DISCHARGE_TIME = 90,
+
+    LASER_DAMAGE = 20,
+
+    ANCIENT_HULK_DAMAGE = 200,
+    ANCIENT_HULK_MINE_DAMAGE = 100,
+    ANCIENT_HULK_MELEE_RANGE = 5.5,
+    ANCIENT_HULK_ATTACK_RANGE = 5.5,
+
+    IRON_LORD_DAMAGE = wilson_attack*2,
+    IRON_LORD_TIME = 3*60,
+
+    INFUSED_IRON_PERISHTIME = total_day_time*2,
 }
 
 for key, value in pairs(tuning) do
