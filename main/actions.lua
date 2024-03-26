@@ -130,7 +130,6 @@ ACTIONS.MOUNTDUNG.validfn = function(act)
 end
 
 ACTIONS.ASSEMBLE_ROBOT.fn = function(act)
-    print("Assemble")
     act.doer.components.mechassembly:Assemble(act.target)
     return true
 end

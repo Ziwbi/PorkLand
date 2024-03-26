@@ -293,6 +293,53 @@ local function dofloodfillfromcoord(x,y,w, h, tiles, islands)
 end
 
 local function GetDropLocations(inst)
+    local island_nodes = {
+        {
+            ["START"] = true,
+            ["Edge_of_the_unknown"] = true,
+            ["painted_sands"] = true,
+            ["plains" ]= true,
+            ["rainforests" ]= true,
+            ["rainforest_ruins" ]= true,
+            ["plains_ruins"] = true,
+            ["Edge_of_civilization"]= true,
+            ["Deep_rainforest"] = true,
+            ["Pigtopia"] = true,
+            ["Pigtopia_capital"] = true,
+            ["Deep_lost_ruins_gas"] = true,
+            ["Edge_of_the_unknown_2"] = true,
+            ["Lilypond_land"] = false,
+            ["Lilypond_land_2"] = false,
+            ["this_is_how_you_get_ants"] = true,
+            ["Deep_rainforest_2"] = true,
+            ["Lost_Ruins_1"] = true,
+            ["Lost_Ruins_4"] = true,
+        },
+        {
+            ["Deep_rainforest_3"] = true,
+            ["Deep_rainforest_mandrake"] = true,
+            ["Path_to_the_others"] = true,
+            ["Other_edge_of_civilization"] = true,
+            ["Other_pigtopia"] = true,
+            ["Other_pigtopia_capital"] = true,
+        },
+        {
+            ["Deep_lost_ruins4"] = true,
+            ["lost_rainforest"] = true,
+        },
+        {
+            ["pincale"] = true,
+        },
+        {
+            ["Deep_wild_ruins4"] = true,
+            ["wild_rainforest"] = true,
+            ["wild_ancient_ruins"] = true,
+        }
+    }
+
+    local nodes = TheWorld.topology.nodes
+    -- TheWorld.topolog.nodes[1].tags[]
+
     local islands = {}
     local tiles = {}
     local map = TheWorld.Map
@@ -367,9 +414,11 @@ local function ShootProjectile(inst, targetpos)
 
     local pt = inst.shotspawn:GetPosition()
     projectile.Transform:SetPosition(pt.x, pt.y, pt.z)
-    projectile.components.complexprojectile:SetHorizontalSpeed(speed)
-    projectile.components.complexprojectile:SetGravity(-25)
-    projectile.components.complexprojectile:Launch(targetpos, inst, inst)
+    -- projectile.components.throwable.speed = speed
+    -- projectile.components.throwable:Throw(targetpos, inst)
+    projectile.components.pl_complexprojectile:SetHorizontalSpeed(speed)
+    projectile.components.pl_complexprojectile:SetGravity(-25)
+    projectile.components.pl_complexprojectile:Launch(targetpos, inst, inst)
     projectile.owner = inst
 end
 

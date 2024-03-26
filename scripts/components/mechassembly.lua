@@ -42,11 +42,14 @@ function MechAssembly:Assemble(other)
         hulk = SpawnPrefab("ancient_robots_assembly")
         local x, y, z = self.inst.Transform:GetWorldPosition()
         hulk.Transform:SetPosition(x, 0, z)
+        for body_part, amount in pairs(other.components.mechassembly.parts) do
+            hulk.components.mechassembly.parts[body_part] = hulk.components.mechassembly.parts[body_part] + amount
+        end
         other:Remove()
     end
 
     for body_part, amount in pairs(self.parts) do
-        hulk.components.mechassembly.parts[body_part] = amount
+        hulk.components.mechassembly.parts[body_part] = hulk.components.mechassembly.parts[body_part] + amount
     end
 
     hulk:PushEvent("assemble")
@@ -55,7 +58,6 @@ end
 
 function MechAssembly:Dissemble()
     local function spawn_part(spawn_data)
-
         local part = SpawnPrefab(spawn_data.prefab)
         part.Transform:SetPosition(spawn_data.xpos, 0, spawn_data.zpos)
         part.Transform:SetRotation(spawn_data.rotation)
@@ -119,6 +121,15 @@ function MechAssembly:OnLoad(data)
     for body_part, amount in pairs(data) do
         self.parts[body_part] = amount
     end
+end
+
+function MechAssembly:GetDebugString()
+    local s = ""
+    for body_part, amount in pairs(self.parts) do
+        s = s .. string.format("%s: %d, ", body_part, amount)
+    end
+
+    return s
 end
 
 return MechAssembly

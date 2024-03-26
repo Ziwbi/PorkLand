@@ -504,9 +504,9 @@ local function orb_fn()
 
     inst:AddComponent("locomotor")
 
-    inst:AddComponent("complexprojectile")
-    inst.components.complexprojectile:SetOnHit(OnHitOrb)
-    inst.components.complexprojectile.yOffset = 2.5
+    inst:AddComponent("pl_complexprojectile")
+    inst.components.pl_complexprojectile:SetOnHit(OnHitOrb)
+    inst.components.pl_complexprojectile.yOffset = 2.5
 
     inst:AddComponent("combat")
     inst.components.combat:SetDefaultDamage(TUNING.ANCIENT_HULK_MINE_DAMAGE)
