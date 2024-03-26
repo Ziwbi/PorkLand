@@ -239,6 +239,17 @@ local function OnCollide(inst, other)
     -- may want to do some charging damage?
 end
 
+local function PushMusic(inst)
+    if ThePlayer == nil then
+        inst._playingmusic = false
+    elseif ThePlayer:IsNear(inst, inst._playingmusic and 40 or 20) then
+        inst._playingmusic = true
+        ThePlayer:PushEvent("triggeredevent", {name ="ancient_hulk"})
+    elseif inst._playingmusic and not ThePlayer:IsNear(inst, 50) then
+        inst._playingmusic = false
+    end
+end
+
 local brain = require("brains/ancienthulkbrain")
 
 local function fn()
@@ -286,6 +297,11 @@ local function fn()
     inst:AddTag("mech")
 
     inst.entity:SetPristine()
+
+    if not TheNet:IsDedicated() then
+        inst._playingmusic = false
+        inst:DoPeriodicTask(1, PushMusic, 0)
+    end
 
     if not TheWorld.ismastersim then
         return inst
