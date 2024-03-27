@@ -64,6 +64,7 @@ PrefabFiles = {
     "ancient_robots",
     "infused_iron",
     "pl_rocks",
+    "living_artifact"
 }
 
 Assets = {
@@ -85,6 +86,9 @@ Assets = {
     Asset("ATLAS", "images/overlays/fx5.xml"),  -- fog
     Asset("IMAGE", "images/overlays/fx5.tex"),
     Asset("ANIM", "anim/leaves_canopy2.zip"),  --canopy
+    Asset("ATLAS", "images/overlays/fx6.xml"),  -- living artifact
+    Asset("IMAGE", "images/overlays/fx6.tex"),
+    Asset("ANIM", "anim/livingartifact_meter.zip"),
 
     Asset("ANIM", "anim/moon_aporkalypse_phases.zip"),  -- blood moon
 
@@ -94,6 +98,10 @@ Assets = {
     Asset("ANIM", "anim/player_actions_hack.zip"),
     Asset("ANIM", "anim/player_actions_shear.zip"),
     Asset("ANIM", "anim/player_sneeze.zip"),
+    Asset("ANIM", "anim/player_living_suit_destruct.zip"),
+    Asset("ANIM", "anim/player_living_suit_morph.zip"),
+    Asset("ANIM", "anim/player_living_suit_punch.zip"),
+    Asset("ANIM", "anim/player_living_suit_shoot.zip"),
     Asset("ANIM", "anim/player_mount_sneeze.zip"),
     Asset("ANIM", "anim/player_actions_panning.zip"),
     Asset("ANIM", "anim/player_lifeplant.zip"),

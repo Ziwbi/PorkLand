@@ -12,6 +12,7 @@ local PL_ACTIONS = {
     DIGDUNG = Action({mount_enabled = true}),
     MOUNTDUNG = Action({}),
     ASSEMBLE_ROBOT = Action({}),
+    CHARGE_UP = Action({priority = 2, rmb = true}),
 }
 
 for name, ACTION in pairs(PL_ACTIONS) do
@@ -132,6 +133,10 @@ end
 ACTIONS.ASSEMBLE_ROBOT.fn = function(act)
     act.doer.components.mechassembly:Assemble(act.target)
     return true
+end
+
+ACTIONS.CHARGE_UP.fn = function(act)
+    act.doer:PushEvent("beginchargeup")
 end
 
 -- Patch for hackable things

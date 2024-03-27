@@ -1,10 +1,12 @@
 return {
     ACTIONS = {
+        CHARGE = "Charge",
         HACK = "Hack",
         PAN = "Pan",
         PICK = {
             DIGIN = "Dig in",
         },
+        PUNCH = "Punch",
         SHEAR = "Shear",
         SMELT = "Smelt",
     },

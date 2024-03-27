@@ -2,6 +2,7 @@ local AncientHulkUtil = require("prefabs/ancient_hulk_util")
 
 local setfires = AncientHulkUtil.setfires
 local SetLightValueWithFade = AncientHulkUtil.SetLightValueWithFade
+local ApplyDamageToEntities = AncientHulkUtil.ApplyDamageToEntities
 
 local SHAKE_DIST = 40
 
@@ -79,94 +80,6 @@ local function OnAttacked(inst, data)
     inst.components.combat:SetTarget(data.attacker)
 end
 
-local function applydamagetoent(inst,ent, targets, rad, hit)
-    local x, y, z = inst.Transform:GetWorldPosition()
-    if hit then
-        targets = {}
-    end
-    if not rad then
-        rad = 0
-    end
-    local v = ent
-    if not targets[v] and v:IsValid() and not v:IsInLimbo() and not (v.components.health ~= nil and v.components.health:IsDead()) and not v:HasTag("laser_immune") then
-        local vradius = 0
-        if v.Physics then
-            vradius = v.Physics:GetRadius()
-        end
-
-        local range = rad + vradius
-        if hit or v:GetDistanceSqToPoint(Vector3(x, y, z)) < range * range then
-            local isworkable = false
-            if v.components.workable ~= nil then
-                local work_action = v.components.workable:GetWorkAction()
-                --V2C: nil action for campfires
-                isworkable =
-                    (   work_action == nil and v:HasTag("campfire")    ) or
-
-                        (   work_action == ACTIONS.CHOP or
-                            work_action == ACTIONS.HAMMER or
-                            work_action == ACTIONS.MINE or
-                            work_action == ACTIONS.DIG or
-                            work_action == ACTIONS.BLANK
-                        )
-            end
-            if isworkable then
-                targets[v] = true
-                v:DoTaskInTime(0.6, function()
-                    if v.components.workable then
-                        v.components.workable:Destroy(inst)
-                        local vx,vy,vz = v.Transform:GetWorldPosition()
-                        v:DoTaskInTime(0.3, function() setfires(vx,vy,vz,1) end)
-                    end
-                 end)
-                if v:IsValid() and v:HasTag("stump") then
-                   -- v:Remove()
-                end
-            elseif v.components.pickable ~= nil
-                and v.components.pickable:CanBePicked()
-                and not v:HasTag("intense") then
-                targets[v] = true
-                local num = v.components.pickable.numtoharvest or 1
-                local product = v.components.pickable.product
-                local x1, y1, z1 = v.Transform:GetWorldPosition()
-                v.components.pickable:Pick(inst) -- only calling this to trigger callbacks on the object
-                if product ~= nil and num > 0 then
-                    for i = 1, num do
-                        local loot = SpawnPrefab(product)
-                        loot.Transform:SetPosition(x1, 0, z1)
-                        targets[loot] = true
-                    end
-                end
-
-            elseif v.components.health then
-                inst.components.combat:DoAttack(v)
-                if v:IsValid() then
-                    if not v.components.health or not v.components.health:IsDead() then
-                        if v.components.freezable ~= nil then
-                            if v.components.freezable:IsFrozen() then
-                                v.components.freezable:Unfreeze()
-                            elseif v.components.freezable.coldness > 0 then
-                                v.components.freezable:AddColdness(-2)
-                            end
-                        end
-                        if v.components.temperature ~= nil then
-                            local maxtemp = math.min(v.components.temperature:GetMax(), 10)
-                            local curtemp = v.components.temperature:GetCurrent()
-                            if maxtemp > curtemp then
-                                v.components.temperature:DoDelta(math.min(10, maxtemp - curtemp))
-                            end
-                        end
-                    end
-                end
-            end
-            if v:IsValid() and v.AnimState then
-                SpawnPrefab("deerclops_laserhit"):SetTarget(v)
-            end
-        end
-    end
-    return targets
-end
-
 local function DoDamage(inst, rad, startang, endang, spawnburns)
     local targets = {}
     local x, y, z = inst.Transform:GetWorldPosition()
@@ -197,7 +110,7 @@ local function DoDamage(inst, rad, startang, endang, spawnburns)
             end
         end
         if dodamage then
-            targets = applydamagetoent(inst,v, targets, rad)
+            targets = ApplyDamageToEntities(inst,v, targets, rad)
         end
     end
 end
@@ -532,7 +445,7 @@ local function orb_fn()
 end
 
 local function OnCollidesmall(inst, other)
-    applydamagetoent(inst, other, nil, nil, true)
+    ApplyDamageToEntities(inst, other, nil, nil, true)
 
     local explosion = SpawnPrefab("laser_explosion")
     explosion.Transform:SetPosition(inst.Transform:GetWorldPosition())

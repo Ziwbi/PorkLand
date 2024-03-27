@@ -16,6 +16,7 @@ return {
         "Break, darn you!"
     },
     ANNOUNCE_SNEEZE = "AHHH CHOOOO!",
+    ANNOUNCE_SUITUP = "For science!",
     ANNOUNCE_TOO_HUMID = {
         "This %s is so heavy.",
         "This %s is too hot.",

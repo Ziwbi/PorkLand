@@ -2,6 +2,7 @@ GLOBAL.setfenv(1, GLOBAL)
 
 local FogOver = require("widgets/fogover")
 local LeavesOver = require("widgets/pl_leaf_canopy")
+local LivingArtifactOver = require("widgets/livingartifactover")
 local PoisonOver = require("widgets/poisonover")
 local PollenOver = require("widgets/pollenover")
 
@@ -12,6 +13,11 @@ function PlayerHud:CreateOverlays(owner, ...)
     _CreateOverlays(self, owner, ...)
 
     self.poisonover = self.overlayroot:AddChild(PoisonOver(owner))
+
+    self.livingartifactover = self.overlayroot:AddChild(LivingArtifactOver(owner))
+    self.inst:ListenForEvent("livingartifactoveron", function(inst, data) self.livingartifactover:UpdateState(data) end, self.owner)
+    self.inst:ListenForEvent("livingartifactoveroff", function(inst, data) self.livingartifactover:UpdateState(data) end, self.owner)
+    self.inst:ListenForEvent("livingartifactoverpulse", function(inst, data) self.livingartifactover:Flash(data) end, self.owner)
 
     self.fogover = self.overlayroot:AddChild(FogOver(owner))
     self.fogover:Hide()
