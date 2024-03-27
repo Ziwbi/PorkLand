@@ -58,6 +58,12 @@ PrefabFiles = {
     "waterdrop",
     "weevole_carapace",
     "weevole",
+
+    "ancient_hulk",
+    "ancient_robot_assembly",
+    "ancient_robots",
+    "infused_iron",
+    "pl_rocks",
 }
 
 Assets = {

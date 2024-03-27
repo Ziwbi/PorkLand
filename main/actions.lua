@@ -11,6 +11,7 @@ local PL_ACTIONS = {
     PEAGAWK_TRANSFORM = Action({}),
     DIGDUNG = Action({mount_enabled = true}),
     MOUNTDUNG = Action({}),
+    ASSEMBLE_ROBOT = Action({}),
 }
 
 for name, ACTION in pairs(PL_ACTIONS) do
@@ -128,6 +129,10 @@ ACTIONS.MOUNTDUNG.validfn = function(act)
     end
 end
 
+ACTIONS.ASSEMBLE_ROBOT.fn = function(act)
+    act.doer.components.mechassembly:Assemble(act.target)
+    return true
+end
 
 -- Patch for hackable things
 local _FERTILIZEfn = ACTIONS.FERTILIZE.fn
