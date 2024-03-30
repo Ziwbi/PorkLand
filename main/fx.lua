@@ -121,7 +121,13 @@ local pl_fx = {
             inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
             inst.Transform:SetScale(0.85, 0.85, 0.85)
         end,
-    }
+    },
+    {
+        name = "living_suit_explode_fx",
+        bank = "living_suit_explode_fx",
+        build = "living_suit_explode_fx",
+        anim = "idle",
+    },
 }
 
 -- Sneakily add these to the FX table

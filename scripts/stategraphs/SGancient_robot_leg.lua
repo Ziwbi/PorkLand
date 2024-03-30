@@ -16,7 +16,7 @@ local events =
 {
     AncientRobot.Events.OnStep(),
     AncientRobot.Events.OnLocomote(),
-    AncientRobot.Events.DoBeamAttack(),
+    AncientRobot.Events.DoLeapAttack(),
     AncientRobot.Events.OnAttacked(),
     AncientRobot.Events.OnShocked(),
     AncientRobot.Events.OnActivate(),

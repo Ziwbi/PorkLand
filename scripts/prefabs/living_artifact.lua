@@ -44,18 +44,41 @@ local function DoDamage(inst, rad, startang, endang, spawnburns)
     end
 end
 
-local function CanInteract(inst,doer)
-    if doer and not doer.were and (not doer.components.rider or not doer.components.rider:IsRiding()) and (not doer.components.driver or not doer.components.driver:GetIsDriving()) then
-        return true
-    end
-end
-
 local function IronLordhurt(inst, delta)
     if delta < 0 then
         inst.sg:PushEvent("attacked")
     end
 
     return true
+end
+
+local function SavePlayerData(player)
+    local data = {}
+
+    data.build = player.AnimState:GetBuild()
+    data.skins = player.components.skinner:GetClothing()
+
+    data.health_redirect = player.components.health.redirect
+
+    -- Wagstaff stuff
+    -- data.wasnearsighted = player.components.vision.nearsighted
+
+    return data
+end
+
+local function LoadPlayerData(player, data)
+    player.AnimState:ClearOverrideBuild("living_suit_build_morph")
+    player.AnimState:SetBuild(data.build)
+    player.components.skinner:SetSkinName(data.skins.base, true)
+    for _, skin in pairs(data.skins) do
+        player.components.skinner:SetClothing(skin)
+    end
+
+    player.components.health.redirect = data.health_redirect
+
+    -- Wagstaff stuff
+    -- player.components.vision.nearsighted = data.wasnearsighted
+    -- player.components.vision:CheckForGlasses()
 end
 
 local function ironactionstring(inst, action)
@@ -93,7 +116,8 @@ local function LeftClickPicker(inst, target_ent, pos)
         return inst.components.playeractionpicker:SortActionList({ACTIONS.ATTACK}, target_ent, nil)
     end
 
-    if target_ent and target_ent.components.workable and target_ent.components.workable.workable and target_ent.components.workable.workleft > 0 and inst.components.worker:CanDoAction(target_ent.components.workable.action) then
+    if target_ent and target_ent.components.workable and target_ent.components.workable.workable 
+        and target_ent.components.workable.workleft > 0 and inst.components.worker and inst.components.worker:CanDoAction(target_ent.components.workable.action) then
         return inst.components.playeractionpicker:SortActionList({target_ent.components.workable.action}, target_ent, nil)
     end
 
@@ -122,8 +146,13 @@ end
 local function BecomeIronLord(inst, instant)
     local player = inst.player
 
+    inst.player_data = SavePlayerData(player)
+
+    inst.player.components.skinner:SetSkinName("", nil, true)
+    inst.player.components.skinner:ClearAllClothing()
+
+    inst.AnimState:Hide("beard")
     player.AnimState:AddOverrideBuild("player_living_suit_morph")
-    player.AnimState:SetBuild("living_suit_build")
 
     player:AddTag("fireimmune")
     player:AddTag("has_gasmask")
@@ -132,6 +161,11 @@ local function BecomeIronLord(inst, instant)
     player:AddTag("mech")
 
     player.player_classified.living_artifact:set(inst)
+
+    player.ActionStringOverride = ironactionstring
+    player.components.playercontroller.actionbuttonoverride = ArtifactActionButton
+    player.components.playeractionpicker.leftclickoverride = LeftClickPicker
+    player.components.playeractionpicker.rightclickoverride = RightClickPicker
 
     player.components.combat:SetDefaultDamage(TUNING.IRON_LORD_DAMAGE)
     player.components.inventory:DropEverything()
@@ -144,7 +178,7 @@ local function BecomeIronLord(inst, instant)
     player.components.temperature:SetTemp(20)
 
     player.components.health:SetPercent(1)
-    player.components.health.redirect = IronLordhurt -- TODO save redirect for wanda
+    player.components.health.redirect = IronLordhurt
 
     if player.components.oldager then
         player:StopUpdatingComponent(player.components.oldager)
@@ -164,16 +198,8 @@ local function BecomeIronLord(inst, instant)
     player.components.worker:SetAction(ACTIONS.HACK, 2)
 
     -- Wagstaff stuff
-    -- inst.wasnearsighted = player.components.vision.nearsighted
     -- player.components.vision.nearsighted = false
     -- player.components.vision:CheckForGlasses()
-
-    player.ActionStringOverride = ironactionstring
-    player.components.playercontroller.actionbuttonoverride = ArtifactActionButton
-    player.components.playeractionpicker.leftclickoverride = LeftClickPicker
-    player.components.playeractionpicker.rightclickoverride = RightClickPicker
-
-    player:SetStateGraph("SGironlord")
 
     player:PushEvent("livingartifactoveron")
 
@@ -200,8 +226,10 @@ local function BecomeIronLord(inst, instant)
         end
     end
 
+    inst:StartUpdatingComponent(inst.components.livingartifact)
+
     if not instant then
-        player.sg:GoToState("morph")
+        player.sg:GoToState("ironlord_morph")
         player:DoTaskInTime(2, function()
             player.components.talker:Say(GetString(player.prefab, "ANNOUNCE_SUITUP"))
         end)
@@ -213,13 +241,18 @@ end
 local function Revert(inst)
     inst.nightlight:Remove()
     inst:PushEvent("stop_flashing")
-    inst.ironlord = false
     inst.components.reticule:DestroyReticule()
 
     local player = inst.player
 
+    LoadPlayerData(player, inst.player_data)
+
+    player.ActionStringOverride = nil
+    player.components.playercontroller.actionbuttonoverride = nil
+    player.components.playeractionpicker.leftclickoverride = nil
+    player.components.playeractionpicker.rightclickoverride = nil
+
     player.AnimState:SetBank("wilson")
-    player.AnimState:SetBuild(player.prefab)
     player.AnimState:Show("beard")
 
     player.SoundEmitter:KillSound("chargedup")
@@ -230,18 +263,7 @@ local function Revert(inst)
     player:RemoveTag("has_gasmask")
     player:RemoveTag("fireimmune")
 
-    -- Wagstaff stuff
-    -- player.components.vision.nearsighted = inst.wasnearsighted
-    -- player.components.vision:CheckForGlasses()
-
-    player.ActionStringOverride = nil
-    player.components.playercontroller.actionbuttonoverride = nil
-    player.components.playeractionpicker.leftclickoverride = nil
-    player.components.playeractionpicker.rightclickoverride = nil
-
     player.player_classified.living_artifact:set(nil)
-
-    player:SetStateGraph("SGwilson")
 
     player:RemoveComponent("worker")
 
@@ -261,13 +283,11 @@ local function Revert(inst)
 
     player.components.hunger:Resume()
     player.components.sanity.ignore = false
-    player.components.health.redirect = nil
 
     if player.components.oldager then
         player:StartUpdatingComponent(player.components.oldager)
     end
 
-    player.livingartifact = nil
     player:PushEvent("livingartifactoveroff")
     player:ClearBufferedAction()
     player:DoTaskInTime(0, function() player.sg:GoToState("bucked_post") end)
@@ -275,48 +295,44 @@ local function Revert(inst)
     inst:Remove()
 end
 
-local function OnActivate(inst, player)
+local function OnActivate(inst, player, instant)
     if player.components.inventory:FindItem(function(item) if inst == item then return true end end) then
         player.components.inventory:RemoveItem(inst)
         local x, y, z = player.Transform:GetWorldPosition()
         inst.Transform:SetPosition(x, y, z)
     end
 
-    inst.ironlord = true
+    inst:AddTag("enabled")
     inst.player = player
 
-    inst.components.fueled:StartConsuming()
-
     inst.AnimState:PlayAnimation("activate")
-    inst:ListenForEvent("animover",function()
+    inst:ListenForEvent("animover", function()
         if inst.AnimState:IsCurrentAnimation("activate") then
             inst:Hide()
         end
     end)
 
+    inst:ListenForEvent("ironlord_morph_complete", function() BecomeIronLord_post(inst) end, player)
     inst:ListenForEvent("revert", function() Revert(inst) end, player)
 
-    BecomeIronLord(inst, false)
+    BecomeIronLord(inst, instant)
 end
 
---#region fueled component
-local function FueledDepletedFn(inst)
-    inst.player.sg:GoToState("explode")
+local function OnFinished(inst)
+    inst.player.sg:GoToState("ironlord_explode")
 end
 
-local function FueledUpdateFn(inst)
-    inst._fuel_level:set(inst.components.fueled.currentfuel)
-    inst.player:PushEvent("ironlorddelta", {percent = inst.components.fueled:GetPercent()})
+local function OnDelta(inst)
+    inst._time_left:set(inst.components.livingartifact.time_left)
+    inst.player:PushEvent("ironlorddelta", {percent = inst.components.livingartifact:GetPercent()})
 end
---#endregion
 
---#region player hud
 local function DoFlashTask(inst)
     local time = 0
     local nextflash = 0
     local intensity = 0
 
-    local per = inst._fuel_level:value()/TUNING.IRON_LORD_TIME
+    local per = inst._time_left:value()/TUNING.IRON_LORD_TIME
     if per > 0.5 then
         time = 1
         nextflash = 2
@@ -350,33 +366,34 @@ local function OnStopFlashing(inst, data)
         inst.flash_task = nil
     end
 end
---#endregion
 
 local function OnSave(inst, data)
-    local refs = {}
-
-    if inst.wasnearsighted then
-        data.wasnearsighted = inst.wasnearsighted
+    if inst:HasTag("enabled") then
+        data.enabled = true
     end
 
-    if inst.ironlord then
-
-        data.ironlord = inst.ironlord
+    if inst.player_data then
+        data.player_data = deepcopy(inst.player_data)
+        data.playerID = inst.player.GUID
+        return {inst.player.GUID}
     end
-    return refs
 end
 
 local function OnLoad(inst, data)
-    if data.wasnearsighted then
-        inst.wasnearsighted = data.wasnearsighted
-    end
-
-    if data.ironlord then
+    if data.enabled then
         inst:Hide()
-        inst.useloaddata = true
     end
 
-    --GetPlayer().AnimState:Hide("beard")
+    if data.player_data then
+        inst.player_data = data.player_data
+    end
+end
+
+local function OnLoadPostPass(inst, newents, data)
+    if data and data.playerID then
+        inst.player = newents[data.playerID].entity
+        inst.player.AnimState:Hide("beard")
+    end
 end
 
 local function fn()
@@ -394,7 +411,7 @@ local function fn()
     inst.AnimState:SetBuild("living_artifact")
     inst.AnimState:PlayAnimation("idle")
 
-    inst._fuel_level = net_float(inst.GUID, "fueled.level")
+    inst._time_left = net_float(inst.GUID, "ironlord_time_left")
 
     inst.entity:SetPristine()
 
@@ -417,26 +434,20 @@ local function fn()
     inst:AddComponent("combat")
     inst.components.combat:SetDefaultDamage(TUNING.ANCIENT_HULK_MINE_DAMAGE)
 
-    inst:AddComponent("fueled")
-    inst.components.fueled.fueltype = FUELTYPE.MAGIC
-    inst.components.fueled:InitializeFuelLevel(TUNING.IRON_LORD_TIME)
-    inst.components.fueled:SetUpdateFn(FueledUpdateFn)
-    inst.components.fueled:SetDepletedFn(FueledDepletedFn)
-
-    inst:AddComponent("activatable")
-    inst.components.activatable.OnActivate = OnActivate
-    inst.components.activatable.CanActivateFn = CanInteract
+    inst:AddComponent("livingartifact")
+    inst.components.livingartifact:SetOnActivateFn(OnActivate)
+    inst.components.livingartifact:SetOnDeltaFn(OnDelta)
+    inst.components.livingartifact:SetOnFinishedFn(OnFinished)
 
     MakeHauntableLaunch(inst)
     MakeBlowInHurricane(inst, TUNING.WINDBLOWN_SCALE_MIN.MEDIUM, TUNING.WINDBLOWN_SCALE_MAX.MEDIUM)
 
     inst.OnSave = OnSave
     inst.OnLoad = OnLoad
+    inst.OnLoadPostPass = OnLoadPostPass
 
     inst.Revert = Revert
     inst.DoDamage = DoDamage
-
-    inst.BecomeIronLord_post = BecomeIronLord_post
 
     return inst
 end

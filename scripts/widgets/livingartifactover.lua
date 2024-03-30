@@ -71,8 +71,8 @@ function LivingArtifactOver:OnUpdate(dt)
 
     if ThePlayer:HasTag("ironlord") then
         local living_artifact = ThePlayer.player_classified.living_artifact:value()
-        g = Remap(living_artifact._fuel_level:value(), TUNING.IRON_LORD_TIME, 0, 1, 0.1)
-        b = Remap(living_artifact._fuel_level:value(), TUNING.IRON_LORD_TIME, 0, 1, 0)
+        g = Remap(living_artifact._time_left:value(), TUNING.IRON_LORD_TIME, 0, 1, 0.1)
+        b = Remap(living_artifact._time_left:value(), TUNING.IRON_LORD_TIME, 0, 1, 0)
     end
 
     self.img:SetTint(r, g, b, self.currentalpha)

@@ -7,7 +7,7 @@ local IronlordBadge = Class(Badge, function(self, owner)
 
     owner:ListenForEvent("ironlorddelta", function(_, data)
         local percent =  data.percent
-        self:SetPercent(percent, data.max)
+        self:SetPercent(percent, TUNING.IRON_LORD_TIME)
     end, owner)
 end)
 

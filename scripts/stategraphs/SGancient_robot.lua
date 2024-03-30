@@ -37,6 +37,7 @@ AncientRobot.Events.DoBeamAttack = function()
         end
     end)
 end
+
 AncientRobot.Events.DoLeapAttack = function()
     return EventHandler("doleapattack", function(inst, data)
         if not inst.sg:HasStateTag("activating") and not inst.sg:HasStateTag("busy") then

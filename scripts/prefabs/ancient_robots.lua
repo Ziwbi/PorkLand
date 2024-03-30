@@ -119,7 +119,7 @@ local function OnLoad(inst, data)
     end
 end
 
-local function OnLoadPostPass(inst,data)
+local function OnLoadPostPass(inst, newents, data)
     if inst.spawned then
         if inst.spawntask then
             inst.spawntask:Cancel()

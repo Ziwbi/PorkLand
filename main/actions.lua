@@ -13,6 +13,7 @@ local PL_ACTIONS = {
     MOUNTDUNG = Action({}),
     ASSEMBLE_ROBOT = Action({}),
     CHARGE_UP = Action({priority = 2, rmb = true}),
+    USE_LIVING_ARTIFACT = Action({priority = 2, invalid_hold_action = true, mount_enabled = false, rmb = true})
 }
 
 for name, ACTION in pairs(PL_ACTIONS) do
@@ -137,6 +138,15 @@ end
 
 ACTIONS.CHARGE_UP.fn = function(act)
     act.doer:PushEvent("beginchargeup")
+    return true
+end
+
+ACTIONS.USE_LIVING_ARTIFACT.fn = function(act)
+    local target = act.target or act.invobject
+    if target and target.components.livingartifact and not target:HasTag("active") then
+        target.components.livingartifact:Activate(act.doer, false)
+        return true
+    end
 end
 
 -- Patch for hackable things
@@ -189,7 +199,11 @@ end
 local PL_COMPONENT_ACTIONS =
 {
     SCENE = { -- args: inst, doer, actions, right
-
+        livingartifact = function (inst, doer, actions, right)
+            if not inst:HasTag("enabled") then
+                table.insert(actions, ACTIONS.USE_LIVING_ARTIFACT)
+            end
+        end
     },
 
     USEITEM = { -- args: inst, doer, target, actions, right
@@ -204,8 +218,15 @@ local PL_COMPONENT_ACTIONS =
     },
 
     INVENTORY = { -- args: inst, doer, actions, right
+        livingartifact = function (inst, doer, actions, right)
+            if not (inst.replica.inventoryitem and inst.replica.inventoryitem:IsHeldBy(doer)) then
+                return
+            end
 
-
+            if not inst:HasTag("enabled") then
+                table.insert(actions, ACTIONS.USE_LIVING_ARTIFACT)
+            end
+        end
     },
     ISVALID = { -- args: inst, action, right
         hackable = function(inst, action, right)

@@ -330,6 +330,10 @@ local function OnNearMine(inst, ents)
     end)
 end
 
+local function MineTestFn(inst)
+    return not (inst:HasTag("anicent_hulk") or inst:HasTag("flying"))
+end
+
 local function mine_fn()
     local inst = CreateEntity()
 
@@ -374,6 +378,7 @@ local function mine_fn()
     inst.components.creatureprox.period = 0.01
     inst.components.creatureprox:SetDist(3.5, 5)
     inst.components.creatureprox:SetOnNear(OnNearMine)
+    inst.components.creatureprox:SetFindTestFn(MineTestFn)
 
     inst.primed = true
 

@@ -4,8 +4,49 @@ local AddStategraphActionHandler = AddStategraphActionHandler
 local AddStategraphPostInit = AddStategraphPostInit
 GLOBAL.setfenv(1, GLOBAL)
 
+require("stategraphs/commonstates")
+
+local function shoot(inst, is_full_charge)
+    local player = inst
+    local rotation = player.Transform:GetRotation()
+    local pt = Vector3(player.Transform:GetWorldPosition())
+    local angle = rotation * DEGREES
+    local radius = 2.5
+    local offset = Vector3(radius * math.cos( angle ), 0, -radius * math.sin( angle ))
+    local newpt = pt+offset
+
+    if is_full_charge then
+        local beam = SpawnPrefab("ancient_hulk_orb")
+        beam.AnimState:PlayAnimation("spin_loop", true)
+        beam.Transform:SetPosition(newpt.x, newpt.y, newpt.z)
+        beam.host = player
+
+        local targetpos = TheInput:GetWorldPosition()
+        local controller_mode = TheInput:ControllerAttached()
+        if controller_mode then
+            targetpos = Vector3(player.player_classified.livingartifact:value().components.reticule.reticule.Transform:GetWorldPosition())
+        end
+
+        beam.components.pl_complexprojectile:SetHorizontalSpeed(60)
+        beam.components.pl_complexprojectile:SetGravity(-1)
+        beam.components.pl_complexprojectile:Launch(targetpos, player)
+        beam.components.combat.proxy = inst
+        beam.owner = inst
+    else
+        local beam = SpawnPrefab("ancient_hulk_orb_small")
+        beam.Transform:SetPosition(newpt.x, 1, newpt.z)
+        beam.Transform:SetRotation(rotation)
+        beam.AnimState:PlayAnimation("spin_loop",true)
+        beam.components.combat.proxy = inst
+        beam.host = player
+    end
+end
+
 local actionhandlers = {
     ActionHandler(ACTIONS.HACK, function(inst)
+        if inst:HasTag("ironlord") then
+            return not inst.sg:HasStateTag("working") and "ironlord_work" or nil
+        end
         if inst:HasTag("beaver") then
             return not inst.sg:HasStateTag("gnawing") and "gnaw" or nil
         end
@@ -25,6 +66,7 @@ local actionhandlers = {
             end
         end
     end),
+    ActionHandler(ACTIONS.USE_LIVING_ARTIFACT, "give"),
 }
 
 local eventhandlers = {
@@ -478,6 +520,320 @@ local states = {
             end),
         },
     },
+
+    State{
+        name = "ironlord_idle",
+        tags = {"idle", "canrotate"},
+
+        onenter = function(inst, pushanim)
+            inst.components.locomotor:StopMoving()
+
+            if pushanim then
+                inst.AnimState:PlayAnimation(pushanim)
+                inst.AnimState:PushAnimation("idle_loop", true)
+            else
+                inst.AnimState:PlayAnimation("idle_loop", true)
+            end
+
+            if inst.rightbuttondown then
+                inst.sg:GoToState("ironlord_charge")
+            end
+        end,
+
+       events =
+        {
+            EventHandler("animover", function(inst)
+                inst.sg:GoToState("ironlord_idle")
+            end),
+        },
+    },
+
+    State {
+        name = "ironlord_morph",
+        tags = {"busy"},
+
+        onenter = function(inst)
+            inst.components.locomotor:StopMoving()
+            inst.AnimState:PlayAnimation("morph_idle")
+            inst.AnimState:PushAnimation("morph_complete", false)
+        end,
+
+        timeline =
+        {
+            TimeEvent(0   * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/music/iron_lord") end),
+            TimeEvent(15  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/morph") end),
+            TimeEvent(105 * FRAMES, function(inst) ShakeAllCameras(CAMERASHAKE.FULL, 0.7, 0.02, 0.5, inst, 40) end),
+            TimeEvent(105 * FRAMES, function(inst) inst.AnimState:Hide("beard") end),
+        },
+
+        events =
+        {
+            EventHandler("animqueueover", function(inst)
+                inst.sg:GoToState("ironlord_idle")
+            end),
+        },
+
+        onexit = function(inst)
+            inst:PushEvent("ironlord_morph_complete")
+        end,
+    },
+
+    State{
+        name = "ironlord_work",
+        tags = {"busy", "working"},
+
+        onenter = function(inst)
+            inst.Physics:Stop()
+            inst.AnimState:PlayAnimation("power_punch")
+            inst.sg.statemem.action = inst:GetBufferedAction()
+        end,
+
+        timeline =
+        {
+            TimeEvent(8  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch", nil, 0.5) end),
+            TimeEvent(6  * FRAMES, function(inst) inst:PerformBufferedAction() end),
+            TimeEvent(14 * FRAMES, function(inst) inst.sg:RemoveStateTag("working") inst.sg:RemoveStateTag("busy") inst.sg:AddStateTag("idle") end),
+            TimeEvent(15 * FRAMES, function(inst)
+                if (TheInput:IsMouseDown(MOUSEBUTTON_LEFT) or -- TODO
+                   TheInput:IsKeyDown(KEY_SPACE)) and
+                    inst.sg.statemem.action and
+                    inst.sg.statemem.action:IsValid() and
+                    inst.sg.statemem.action.target and
+                    inst.sg.statemem.action.target:IsActionValid(inst.sg.statemem.action.action) and
+                    (inst.sg.statemem.action.target.components.workable or inst.sg.statemem.action.target.components.hackable) then
+                        inst:ClearBufferedAction()
+                        inst:PushBufferedAction(inst.sg.statemem.action)
+                end
+            end),
+        },
+
+        -- events =
+        -- {
+        --     EventHandler("animover", function(inst)
+        --         if inst.AnimState:AnimDone() then
+        --             inst.sg:GoToState("ironlord_idle")
+        --         end
+        --     end),
+        -- },
+    },
+
+    State{
+        name = "ironlord_usedoor",
+        tags = {"doing", "canrotate"},
+
+        onenter = function(inst)
+            inst.sg.statemem.action = inst:GetBufferedAction()
+            inst.components.locomotor:Stop()
+            inst:PerformBufferedAction()
+            inst.sg:GoToState("ironlord_idle")
+        end,
+    },
+
+    State{
+        name = "ironlord_charge",
+        tags = {"busy", "doing"},
+
+        onenter = function(inst)
+            inst.components.locomotor:Stop()
+            inst.AnimState:PlayAnimation("charge_pre")
+            inst.AnimState:PushAnimation("charge_grow")
+            inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/charge_up_LP", "chargedup")
+
+            inst.sg.statemem.ready_to_shoot = false
+            inst.sg.statemem.should_shoot = false
+        end,
+
+        onexit = function(inst)
+            inst:ClearBufferedAction()
+        end,
+
+        onupdate = function(inst)
+            if not (TheInput:IsKeyDown(CONTROL_SECONDARY) or TheInput:IsKeyDown(CONTROL_CONTROLLER_ALTACTION)) then
+                inst.sg.statemem.should_shoot = true
+            end
+
+            if inst.sg.statemem.should_shoot and inst.sg.statemem.ready_to_shoot then
+                inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/common/crafted/iron_lord/smallshot", {timeoffset = math.random()})
+                inst.SoundEmitter:KillSound("chargedup")
+                inst.sg:GoToState("ironlord_shoot", false)
+            end
+
+            local controller_mode = TheInput:ControllerAttached()
+            if controller_mode then
+                local reticulepos = Vector3(inst.livingartifact.components.reticule.reticule.Transform:GetWorldPosition())
+                inst:ForceFacePoint(reticulepos)
+            else
+                local mousepos = TheInput:GetWorldPosition()
+                inst:ForceFacePoint(mousepos)
+            end
+        end,
+
+        timeline =
+        {
+            TimeEvent(15 * FRAMES, function(inst) inst.sg.statemem.ready_to_shoot = true end),
+            TimeEvent(20 * FRAMES, function(inst) inst.sg:GoToState("ironlord_charge_full") end),
+        },
+    },
+
+    State{
+        name = "ironlord_chage_full",
+        tags = {"busy", "doing"},
+
+        onenter = function(inst)
+            inst.components.locomotor:Stop()
+            inst.AnimState:PlayAnimation("charge_super_pre")
+            inst.AnimState:PushAnimation("charge_super_loop", true)
+            inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/electro")
+
+            inst.sg.statemem.ready_to_shoot = false
+            inst.sg.statemem.should_shoot = false
+        end,
+
+        onexit = function(inst)
+            inst:ClearBufferedAction()
+            inst.SoundEmitter:KillSound("chargedup")
+        end,
+
+        onupdate = function(inst)
+            if not (TheInput:IsKeyDown(CONTROL_SECONDARY) or TheInput:IsKeyDown(CONTROL_CONTROLLER_ALTACTION)) then
+                inst.sg.statemem.should_shoot = true
+            end
+
+            if inst.sg.statemem.should_shoot and inst.sg.statemem.ready_to_shoot then
+                inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser",  {intensity = math.random(0.7, 1)})
+
+                inst.sg:GoToState("ironlord_shoot", true)
+            end
+
+            local controller_mode = TheInput:ControllerAttached()
+            if controller_mode then
+                local reticulepos = Vector3(inst.livingartifact.components.reticule.reticule.Transform:GetWorldPosition())
+                inst:ForceFacePoint(reticulepos)
+            else
+                local mousepos = TheInput:GetWorldPosition()
+                inst:ForceFacePoint(mousepos)
+            end
+        end,
+
+        timeline =
+        {
+            TimeEvent(5 * FRAMES, function(inst) inst.sg.statemem.ready_to_shoot = true end),
+        },
+    },
+
+    State{
+        name = "ironlord_shoot",
+        tags = {"busy"},
+
+        onenter = function(inst, is_full_charge)
+            inst.components.locomotor:Stop()
+            if is_full_charge then
+                inst.AnimState:PlayAnimation("charge_super_pst")
+            else
+                inst.AnimState:PlayAnimation("charge_pst")
+            end
+            inst.sg.statemem.is_full_charge = is_full_charge
+        end,
+
+        timeline =
+        {
+            TimeEvent(1 * FRAMES, function(inst) shoot(inst, inst.sg.statemem.is_full_charge) end),
+            TimeEvent(5 * FRAMES, function(inst) inst.sg:RemoveStateTag("busy") end),
+
+        },
+
+        events =
+        {
+            EventHandler("animover", function(inst) inst.sg:GoToState("ironlord_idle") end),
+        },
+    },
+
+    State{
+        name = "ironlord_explode",
+        tags = {"busy"},
+
+        onenter = function(inst)
+            inst.components.locomotor:Stop()
+            inst.AnimState:PlayAnimation("suit_destruct")
+        end,
+
+        timeline =
+        {
+            TimeEvent(4  * FRAMES, function(inst) inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/common/crafted/iron_lord/small_explosion", {intensity = 0.2}) end),
+            TimeEvent(8  * FRAMES, function(inst) inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/common/crafted/iron_lord/small_explosion", {intensity = 0.4}) end),
+            TimeEvent(12 * FRAMES, function(inst) inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/common/crafted/iron_lord/small_explosion", {intensity = 0.6}) end),
+            TimeEvent(19 * FRAMES, function(inst) inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/common/crafted/iron_lord/small_explosion", {intensity = 1.0}) end),
+            TimeEvent(26 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/electro", nil, 0.5) end),
+            TimeEvent(35 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/electro", nil, 0.5) end),
+            TimeEvent(54 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/explosion") end),
+
+            TimeEvent(52 * FRAMES, function(inst)
+                local explosion = SpawnPrefab("living_suit_explode_fx")
+                explosion.Transform:SetPosition(inst.Transform:GetWorldPosition())
+                --inst.livingartifact.DoDamage(inst.livingartifact, 5)
+            end),
+        },
+
+        onexit = function(inst)
+            inst:PushEvent("revert")
+        end,
+
+        events =
+        {
+            EventHandler("animover", function(inst)
+                inst.sg:GoToState("ironlord_idle")
+            end),
+        },
+    },
+
+    State{
+        name = "ironlord_hit",
+        tags = {"hit", "busy"},
+
+        onenter = function(inst)
+            inst.components.locomotor:StopMoving()
+            inst.AnimState:PlayAnimation("hit")
+			CommonHandlers.UpdateHitRecoveryDelay(inst)
+        end,
+
+        events =
+        {
+            EventHandler("animover", function(inst)
+                if inst.AnimState:AnimDone() then
+                    inst.sg:GoToState("ironlord_idle")
+                end
+            end),
+        },
+    },
+
+    State{
+        name = "ironlord_attack",
+        tags = {"attack", "busy"},
+
+        onenter = function(inst, target)
+            inst.components.locomotor:StopMoving()
+            inst.AnimState:PlayAnimation("power_punch")
+            inst.components.combat:StartAttack()
+            inst.sg.statemem.target = target
+        end,
+
+        timeline =
+        {
+            TimeEvent(0 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch_pre") end),
+            TimeEvent(8 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch") end),
+            TimeEvent(6 * FRAMES, function(inst) inst:PerformBufferedAction() end),
+            TimeEvent(7 * FRAMES, function(inst) inst.sg:RemoveStateTag("attack") inst.sg:RemoveStateTag("busy") inst.sg:AddStateTag("idle") end),
+        },
+
+        events =
+        {
+            EventHandler("animover", function(inst)
+                if inst.AnimState:AnimDone() then
+                    inst.sg:GoToState("ironlord_idle")
+                end
+            end),
+        },
+    },
 }
 
 for _, actionhandler in ipairs(actionhandlers) do
@@ -495,6 +851,9 @@ end
 AddStategraphPostInit("wilson", function(sg)
     local _attack_deststate = sg.actionhandlers[ACTIONS.ATTACK].deststate
     sg.actionhandlers[ACTIONS.ATTACK].deststate = function(inst, ...)
+        if inst:HasTag("ironlord") then
+            return "ironlord_attack"
+        end
         if not inst.sg:HasStateTag("sneeze") then
             return _attack_deststate and _attack_deststate(inst, ...)
         end
@@ -555,4 +914,49 @@ AddStategraphPostInit("wilson", function(sg)
             return _castspell_deststate and _castspell_deststate(inst, action)
         end
     end
+
+    local _chop_deststate = sg.actionhandlers[ACTIONS.CHOP].deststate
+    sg.actionhandlers[ACTIONS.CHOP].deststate = function(inst, action)
+        if inst:HasTag("ironlord") then
+            return "ironlord_work"
+        else
+            return _chop_deststate(inst, action)
+        end
+    end
+
+    local _mine_deststate = sg.actionhandlers[ACTIONS.MINE].deststate
+    sg.actionhandlers[ACTIONS.MINE].deststate = function(inst, action)
+        if inst:HasTag("ironlord") then
+            return "ironlord_work"
+        else
+            return _mine_deststate(inst, action)
+        end
+    end
+
+    local _dig_deststate = sg.actionhandlers[ACTIONS.DIG].deststate
+    sg.actionhandlers[ACTIONS.DIG].deststate = function(inst, action)
+        if inst:HasTag("ironlord") then
+            return "ironlord_work"
+        else
+            return _dig_deststate(inst, action)
+        end
+    end
+
+    local _hammer_deststate = sg.actionhandlers[ACTIONS.HAMMER].deststate
+    sg.actionhandlers[ACTIONS.HAMMER].deststate = function(inst, action)
+        if inst:HasTag("ironlord") then
+            return "ironlord_work"
+        else
+            return _hammer_deststate(inst, action)
+        end
+    end
+
+    local _attacked_handler_fn = sg.events["attacked"].fn
+    sg.events["attacked"] = EventHandler("attacked", function(inst, data)
+        if inst:HasTag("ironlord") then
+            inst.sg:GoToState("ironlord_hit")
+        else
+            _attacked_handler_fn(inst, data)
+        end
+    end)
 end)
