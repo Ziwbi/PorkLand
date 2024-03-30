@@ -815,6 +815,9 @@ local states = {
             inst.AnimState:PlayAnimation("power_punch")
             inst.components.combat:StartAttack()
             inst.sg.statemem.target = target
+
+            local cooldown = math.max(inst.components.combat.min_attack_period, 13 * FRAMES)
+            inst.sg:SetTimeout(cooldown)
         end,
 
         timeline =

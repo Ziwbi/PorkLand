@@ -134,6 +134,8 @@ local function RightClickPicker(inst, target_ent, pos)
 end
 
 local function BecomeIronLord_post(inst)
+    inst.player.components.skinner:SetSkinName("", nil, true)
+    inst.player.components.skinner:ClearAllClothing()
     inst.player.AnimState:SetBuild("living_suit_build")
 
     local controller_mode = TheInput:ControllerAttached()
@@ -147,9 +149,6 @@ local function BecomeIronLord(inst, instant)
     local player = inst.player
 
     inst.player_data = SavePlayerData(player)
-
-    inst.player.components.skinner:SetSkinName("", nil, true)
-    inst.player.components.skinner:ClearAllClothing()
 
     inst.AnimState:Hide("beard")
     player.AnimState:AddOverrideBuild("player_living_suit_morph")
@@ -171,11 +170,14 @@ local function BecomeIronLord(inst, instant)
     player.components.inventory:DropEverything()
     player.components.locomotor.runspeed = TUNING.WILSON_RUN_SPEED * 1.3
 
+    player.components.grogginess:SetEnableSpeedMod(false)
+
     if player.components.poisonable then
         player.components.poisonable:SetBlockAll(true)
     end
 
     player.components.temperature:SetTemp(20)
+    player:StopUpdatingComponent(player.components.temperature)
 
     player.components.health:SetPercent(1)
     player.components.health.redirect = IronLordhurt
@@ -272,10 +274,13 @@ local function Revert(inst)
 
     player.components.combat:SetDefaultDamage(TUNING.UNARMED_DAMAGE)
 
+    player.components.grogginess:SetEnableSpeedMod(true)
+
     player.components.moisture.moisture = 0
 
     player.components.temperature:SetTemperature(TUNING.STARTING_TEMP)
     player.components.temperature:SetTemp(nil)
+    player:StartUpdatingComponent(player.components.temperature)
 
     if player.components.poisonable then
         player.components.poisonable:SetBlockAll(nil)

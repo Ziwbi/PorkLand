@@ -64,7 +64,8 @@ PrefabFiles = {
     "ancient_robots",
     "infused_iron",
     "pl_rocks",
-    "living_artifact"
+    "living_artifact",
+    "ancient_hulk_laser",
 }
 
 Assets = {

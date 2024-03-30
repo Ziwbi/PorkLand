@@ -71,9 +71,9 @@ local function spawnburns(inst,rad,startangle,endangle,num)
     for i=1,num do
         local offset = Vector3(rad * math.cos( angle ), 0, rad * math.sin( angle ))
         local newpt = pt + offset
-        local fx = SpawnPrefab("deerclops_laser")
+        local fx = SpawnPrefab("ancient_hulk_laser")
         fx.Transform:SetPosition(newpt.x,newpt.y,newpt.z)
-        local burn =  SpawnPrefab("deerclops_laserscorch")
+        local burn =  SpawnPrefab("ancient_hulk_laserscorch")
         burn.Transform:SetPosition(newpt.x,newpt.y,newpt.z)
         angle = angle + angdiff
     end
@@ -267,10 +267,10 @@ local states =
                 ShakeAllCameras(CAMERASHAKE.FULL, 0.7, 0.02, 2, inst, SHAKE_DIST)
 
                 local x,y,z = inst.Transform:GetWorldPosition()
-                -- Originally there were only 7 laserscorch, I think this is wrong
+                -- TODO Originally there were only 7 laserscorch, I think this is wrong
                 for i = -1, 1 do
                     for j = -1, 1 do
-                        SpawnPrefab("deerclops_laserscorch").Transform:SetPosition(x + i, 0, z + j)
+                        SpawnPrefab("ancient_hulk_laserscorch").Transform:SetPosition(x + i, 0, z + j)
                     end
                 end
 
@@ -337,7 +337,7 @@ local states =
 
         timeline =
         {
-            TimeEvent(11 * FRAMES, function(inst) inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/ribs/servo", {intensity=math.random()}) end),
+            TimeEvent(11 * FRAMES, function(inst) inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/ribs/servo", {intensity = math.random()}) end),
 
             TimeEvent(15 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/leg/step", nil, 0.15) end),
             TimeEvent(16 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/leg/step", nil, 0.25) end),

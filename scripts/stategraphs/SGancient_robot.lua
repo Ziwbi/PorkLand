@@ -1,7 +1,6 @@
 require("stategraphs/commonstates")
 local AncientHulkUtil = require("prefabs/ancient_hulk_util")
 
-local RemoveMoss = AncientHulkUtil.removemoss
 local SpawnLaser = AncientHulkUtil.SpawnLaser
 local SetLightValue = AncientHulkUtil.SetLightValue
 local SetLightValueAndOverride = AncientHulkUtil.SetLightValueAndOverride
@@ -48,7 +47,7 @@ end
 
 AncientRobot.Events.OnAttacked = function()
     return EventHandler("attacked", function(inst, data)
-        RemoveMoss(inst)
+        inst:PushEvent("removemoss")
         inst.hits = inst.hits + 1
 
         if inst.hits > 2 and math.random() * inst.hits >= 2 then
@@ -229,7 +228,7 @@ AncientRobot.States.AddCommonStates = function(states)
         tags = {"busy", "activating"},
 
         onenter = function(inst, pushanim)
-            RemoveMoss(inst)
+            inst:PushEvent("removemoss")
             inst.components.locomotor:StopMoving()
             inst.AnimState:PlayAnimation("shock")
         end,
@@ -273,7 +272,7 @@ AncientRobot.States.AddActivate = function(states, timeline)
         tags = {"busy", "activating"},
 
         onenter = function(inst, pushanim)
-            RemoveMoss(inst)
+            inst:PushEvent("removemoss")
 
             inst.components.locomotor:StopMoving()
             inst.AnimState:PlayAnimation("activate")

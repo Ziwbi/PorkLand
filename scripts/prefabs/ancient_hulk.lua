@@ -229,7 +229,7 @@ local function fn()
     inst.components.sanityaura.aurafn = CalcSanityAura
 
     inst:AddComponent("health")
-    inst.components.health:SetMaxHealth(TUNING.BEARGER_HEALTH)
+    inst.components.health:SetMaxHealth(TUNING.ANCIENT_HULK_HEALTH)
     inst.components.health.destroytime = 5
     inst.components.health.fire_damage_scale = 0
 

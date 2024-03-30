@@ -56,7 +56,7 @@ local function OnAssemble(inst)
     inst.AnimState:PushAnimation("idle",true)
     local pos = Vector3(inst.Transform:GetWorldPosition())
     TheWorld:PushEvent("ms_sendlightningstrike", pos)
-    SpawnPrefab("deerclops_laserhit"):SetTarget(inst)
+    SpawnPrefab("ancient_hulk_laserhit"):SetTarget(inst)
 
     if inst.components.mechassembly:ShouldSpawnHulk() then
         local hulk = SpawnPrefab("ancient_hulk")

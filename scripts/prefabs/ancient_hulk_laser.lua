@@ -1,3 +1,7 @@
+local AncientHulkUtil = require("prefabs/ancient_hulk_util")
+
+local SetFires = AncientHulkUtil.setfires
+
 local assets =
 {
     Asset("ANIM", "anim/laser_hit_sparks_fx.zip"),
@@ -57,6 +61,8 @@ local function DoDamage(inst, targets, skiptoss)
         inst:DoTaskInTime(2 * FRAMES, inst.Remove)
     end
 
+    SetFires(x, y, z, RADIUS)
+
     inst.components.combat.ignorehitrange = true
     for i, v in ipairs(TheSim:FindEntities(x, 0, z, RADIUS + 3, nil, DAMAGE_CANT_TAGS, DAMAGE_ONEOF_TAGS)) do
         if not targets[v] and v:IsValid() and not v:IsInLimbo() and not (v.components.health ~= nil and v.components.health:IsDead()) then
@@ -83,6 +89,7 @@ local function DoDamage(inst, targets, skiptoss)
                 if isworkable then
                     targets[v] = true
                     v.components.workable:Destroy(inst)
+                    v:DoTaskInTime(0, function() SetFires(x, y, z, RADIUS) end)
                     if v:IsValid() and v:HasTag("stump") then
                         v:Remove()
                     end
@@ -90,17 +97,12 @@ local function DoDamage(inst, targets, skiptoss)
                     and v.components.pickable:CanBePicked()
                     and not v:HasTag("intense") then
                     targets[v] = true
-                    local num = v.components.pickable.numtoharvest or 1
-                    local product = v.components.pickable.product
-                    local x1, y1, z1 = v.Transform:GetWorldPosition()
-                    v.components.pickable:Pick(inst) -- only calling this to trigger callbacks on the object
-                    if product ~= nil and num > 0 then
-                        for i = 1, num do
-                            local loot = SpawnPrefab(product)
-                            loot.Transform:SetPosition(x1, 0, z1)
-                            skiptoss[loot] = true
-                            targets[loot] = true
-                            Launch(loot, inst, LAUNCH_SPEED)
+					local success, loots = v.components.pickable:Pick(inst)
+					if loots then
+						for _, vv in ipairs(loots) do
+							skiptoss[vv] = true
+							targets[vv] = true
+							Launch(vv, inst, LAUNCH_SPEED)
                         end
                     end
                 elseif inst.components.combat:CanTarget(v) then
@@ -178,8 +180,8 @@ local function common_fn(isempty)
 
     if not isempty then
         inst.entity:AddAnimState()
-        inst.AnimState:SetBank("ancient_hulk_laser_hits_sparks")
-        inst.AnimState:SetBuild("ancient_hulk_laser_hit_sparks_fx")
+        inst.AnimState:SetBank("laser_hits_sparks")
+        inst.AnimState:SetBuild("laser_hit_sparks_fx")
         inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
         inst.AnimState:SetLightOverride(1)
 
@@ -264,7 +266,7 @@ local function scorchfn()
     inst.entity:AddAnimState()
     inst.entity:AddNetwork()
 
-    inst.AnimState:SetBuild("burntground")
+    inst.AnimState:SetBuild("laser_burntground")
     inst.AnimState:SetBank("burntground")
     inst.AnimState:PlayAnimation("idle")
     inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
@@ -314,8 +316,8 @@ local function trailfn()
     inst:AddTag("FX")
     inst:AddTag("NOCLICK")
 
-    inst.AnimState:SetBank("lavaarena_staff_smoke_fx")
-    inst.AnimState:SetBuild("lavaarena_staff_smoke_fx")
+    inst.AnimState:SetBank("laser_smoke_fx")
+    inst.AnimState:SetBuild("laser_smoke_fx")
     inst.AnimState:PlayAnimation("idle")
     inst.AnimState:SetAddColour(1, 0, 0, 0)
     inst.AnimState:SetMultColour(1, 0, 0, 1)

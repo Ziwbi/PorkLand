@@ -14,7 +14,7 @@ local prefabs =
     "laser_ring",
 }
 
-local function removemoss(inst)
+local function RemoveMoss(inst)
     if not inst:HasTag("mossy") then
         return
     end
@@ -201,7 +201,6 @@ local function commonfn()
     inst.OnSave = OnSave
     inst.OnLoad = OnLoad
     inst.OnLoadPostPass = OnLoadPostPass
-    inst.removemoss = removemoss
 
     inst.spawntask = inst:DoTaskInTime(0, function()
         if not inst.spawned then
@@ -212,6 +211,7 @@ local function commonfn()
         end
     end)
 
+    inst:ListenForEvent("removemoss", RemoveMoss)
     inst:ListenForEvent("lightningstrike", OnLightning)
     inst:ListenForEvent("timerdone", OnTimerDone)
     inst:WatchWorldState("isaporkalypse", OnAporkalypse)

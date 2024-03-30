@@ -1,18 +1,11 @@
-local SHAKE_DIST = 40
-
--- robot parts--
-
-local function removemoss(inst)
-    inst.removemoss(inst)
-end
-
-local function setfires(x,y,z, rad)
+local function setfires(x, y, z, rad)
     for i, v in ipairs(TheSim:FindEntities(x, 0, z, rad, nil, { "laser", "DECOR", "INLIMBO" })) do
         if v.components.burnable then
             v.components.burnable:Ignite()
         end
     end
 end
+
 local function DoDamage(inst, rad)
     local targets = {}
     local x, y, z = inst.Transform:GetWorldPosition()
@@ -90,7 +83,7 @@ local function DoDamage(inst, rad)
                     end
                 end
                 if v:IsValid() and v.AnimState then
-                    SpawnPrefab("deerclops_laserhit"):SetTarget(v)
+                    SpawnPrefab("ancient_hulk_laserhit"):SetTarget(v)
                 end
             end
         end
@@ -166,7 +159,7 @@ local function SpawnLaser(inst)
             end
             noground = true
         end
-        fx = SpawnPrefab(i > 0 and "deerclops_laser" or "deerclops_laserempty")
+        fx = SpawnPrefab(i > 0 and "ancient_hulk_laser" or "ancient_hulk_laserempty")
         fx.caster = inst
         fx.Transform:SetPosition(x1, 0, z1)
         fx:Trigger(delay * FRAMES, targets, skiptoss)
@@ -179,7 +172,7 @@ local function SpawnLaser(inst)
     end
 
     local function delay_spawn(delay_offset)
-        fx = SpawnPrefab("deerclops_laser")
+        fx = SpawnPrefab("ancient_hulk_laser")
         fx.Transform:SetPosition(x1, 0, z1)
         fx:Trigger((delay + delay_offset) * FRAMES, targets, skiptoss)
     end
@@ -503,7 +496,7 @@ local function ApplyDamageToEntities(inst,ent, targets, rad, hit)
                 end                   
             end
             if v:IsValid() and v.AnimState then
-                SpawnPrefab("deerclops_laserhit"):SetTarget(v)
+                SpawnPrefab("ancient_hulk_laserhit"):SetTarget(v)
             end
         end
     end 
@@ -511,7 +504,6 @@ local function ApplyDamageToEntities(inst,ent, targets, rad, hit)
 end
 
 return {
-    removemoss = removemoss,
     setfires = setfires,
     DoDamage = DoDamage,
     UpdateHit = UpdateHit,
