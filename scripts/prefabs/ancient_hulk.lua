@@ -80,7 +80,7 @@ local function OnAttacked(inst, data)
     inst.components.combat:SetTarget(data.attacker)
 end
 
-local function DoDamage(inst, rad, startang, endang, spawnburns)
+local function DoDamage(inst, rad, startang, endang)
     local targets = {}
     local x, y, z = inst.Transform:GetWorldPosition()
     local angle = nil
@@ -93,24 +93,26 @@ local function DoDamage(inst, rad, startang, endang, spawnburns)
     end
 
     setfires(x,y,z, rad)
-    for i, v in ipairs(TheSim:FindEntities(x, 0, z, rad, nil, { "laser", "DECOR", "INLIMBO" })) do  --  { "_combat", "pickable", "campfire", "CHOP_workable", "HAMMER_workable", "MINE_workable", "DIG_workable" }
+    for i, v in ipairs(TheSim:FindEntities(x, 0, z, rad, nil, { "laser", "DECOR", "INLIMBO" }, { "_combat", "pickable", "campfire", "CHOP_workable", "HAMMER_workable", "MINE_workable", "DIG_workable" })) do
         local dodamage = true
         if startang and endang then
             local dir = inst:GetAngleToPoint(Vector3(v.Transform:GetWorldPosition()))
 
-            local dif = angle - dir
-            while dif > 450 do
-                dif = dif - 360
+            local angle_difference = angle - dir
+            while angle_difference > 450 do
+                angle_difference = angle_difference - 360
             end
-            while dif < 90 do
-                dif = dif + 360
+            while angle_difference < 90 do
+                angle_difference = angle_difference + 360
             end
-            if dif < startang or dif > endang then
-                dodamage = nil
+            if angle_difference < startang or angle_difference > endang then
+                dodamage = false
             end
         end
         if dodamage then
-            targets = ApplyDamageToEntities(inst,v, targets, rad)
+            inst.components.combat:EnableAreaDamage(false)
+            targets = ApplyDamageToEntities(inst, v, targets, rad)
+            inst.components.combat:EnableAreaDamage(true)
         end
     end
 end

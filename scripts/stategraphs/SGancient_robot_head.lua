@@ -108,14 +108,14 @@ AncientRobot.States.AddLeap(states, {
     TimeEvent(25 * FRAMES, PowerGlow),
 },
 {
-    TimeEvent(5  * FRAMES, function(inst)DoDamage(inst, 1.5) end),
-    TimeEvent(10 * FRAMES, function(inst)DoDamage(inst, 2.5) end),
-    TimeEvent(15 * FRAMES, function(inst)DoDamage(inst, 3.3) end),
+    TimeEvent(5  * FRAMES, function(inst) DoDamage (inst, 1.5) end),
+    TimeEvent(10 * FRAMES, function(inst) DoDamage (inst, 2.5) end),
+    TimeEvent(15 * FRAMES, function(inst) DoDamage (inst, 3.3) end),
 
     TimeEvent(0  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/metal_robot/smash") end),
     TimeEvent(13 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/metal_robot/head/servo") end),
     TimeEvent(17 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/metal_robot/head/step") end),
-    TimeEvent(31*FRAMES, function(inst)
+    TimeEvent(31 * FRAMES, function(inst)
         inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/metal_robot/head/step", "steps")
         inst.SoundEmitter:SetParameter("steps", "intensity", 0.08)
     end),

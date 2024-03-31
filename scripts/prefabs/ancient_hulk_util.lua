@@ -407,8 +407,6 @@ local function ShootProjectile(inst, targetpos)
 
     local pt = inst.shotspawn:GetPosition()
     projectile.Transform:SetPosition(pt.x, pt.y, pt.z)
-    -- projectile.components.throwable.speed = speed
-    -- projectile.components.throwable:Throw(targetpos, inst)
     projectile.components.pl_complexprojectile:SetHorizontalSpeed(speed)
     projectile.components.pl_complexprojectile:SetGravity(-25)
     projectile.components.pl_complexprojectile:Launch(targetpos, inst, inst)
@@ -417,14 +415,14 @@ end
 
 local function ApplyDamageToEntities(inst,ent, targets, rad, hit)
     local x, y, z = inst.Transform:GetWorldPosition()
-    if hit then 
+    if hit then
         targets = {}
-    end    
-    if not rad then 
+    end
+    if not rad then
         rad = 0
     end
     local v = ent
-    if not targets[v] and v:IsValid() and not v:IsInLimbo() and not (v.components.health ~= nil and v.components.health:IsDead()) and not v:HasTag("laser_immune") then            
+    if not targets[v] and v:IsValid() and not v:IsInLimbo() and not (v.components.health ~= nil and v.components.health:IsDead()) and not v:HasTag("laser_immune") then
         local vradius = 0
         if v.Physics then
             vradius = v.Physics:GetRadius()
@@ -437,27 +435,23 @@ local function ApplyDamageToEntities(inst,ent, targets, rad, hit)
                 local work_action = v.components.workable:GetWorkAction()
                 --V2C: nil action for campfires
                 isworkable =
-                    (   work_action == nil and v:HasTag("campfire")    ) or
-                    
+                    (work_action == nil and v:HasTag("campfire")) or
                         (   work_action == ACTIONS.CHOP or
                             work_action == ACTIONS.HAMMER or
-                            work_action == ACTIONS.MINE or   
+                            work_action == ACTIONS.MINE or
                             work_action == ACTIONS.DIG or
                             work_action == ACTIONS.BLANK
                         )
             end
             if isworkable then
                 targets[v] = true
-                v:DoTaskInTime(0.6, function() 
+                v:DoTaskInTime(0.6, function()
                     if v.components.workable then
-                        v.components.workable:Destroy(inst) 
+                        v.components.workable:Destroy(inst)
                         local vx,vy,vz = v.Transform:GetWorldPosition()
                         v:DoTaskInTime(0.3, function() setfires(vx,vy,vz,1) end)
                     end
                  end)
-                if v:IsValid() and v:HasTag("stump") then
-                   -- v:Remove()
-                end
             elseif v.components.pickable ~= nil
                 and v.components.pickable:CanBePicked()
                 and not v:HasTag("intense") then
@@ -474,8 +468,9 @@ local function ApplyDamageToEntities(inst,ent, targets, rad, hit)
                     end
                 end
 
-            elseif v.components.health then            
-                inst.components.combat:DoAttack(v)                                    
+            elseif v.components.health then
+                targets[v] = true
+                inst.components.combat:DoAttack(v)
                 if v:IsValid() then
                     if not v.components.health or not v.components.health:IsDead() then
                         if v.components.freezable ~= nil then
@@ -493,14 +488,14 @@ local function ApplyDamageToEntities(inst,ent, targets, rad, hit)
                             end
                         end
                     end
-                end                   
+                end
             end
             if v:IsValid() and v.AnimState then
                 SpawnPrefab("ancient_hulk_laserhit"):SetTarget(v)
             end
         end
-    end 
-    return targets   
+    end
+    return targets
 end
 
 return {
