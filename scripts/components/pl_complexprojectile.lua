@@ -1,10 +1,9 @@
-local ComplexProjectile = Class(function(self, inst)
+local PL_ComplexProjectile = Class(function(self, inst)
 	self.inst = inst
 
-	self.velocity = Vector3(0,0,0)
+	self.velocity = Vector3(0, 0, 0)
 	self.gravity = -9.81
 
-	--self.horizontalSpeed = nil
 	self.horizontalSpeed = 4
 
 	self.yOffset = 3
@@ -17,39 +16,39 @@ local ComplexProjectile = Class(function(self, inst)
 
 end)
 
-function ComplexProjectile:GetDebugString()
+function PL_ComplexProjectile:GetDebugString()
 	return tostring(self.velocity)
 end
 
-function ComplexProjectile:SetHorizontalSpeed(speed)
+function PL_ComplexProjectile:SetHorizontalSpeed(speed)
     self.horizontalSpeed = speed
 end
 
-function ComplexProjectile:SetGravity(g)
+function PL_ComplexProjectile:SetGravity(g)
     self.gravity = g
 end
 
-function ComplexProjectile:SetLaunchOffset(offset)
+function PL_ComplexProjectile:SetLaunchOffset(offset)
     self.launchoffset = offset -- x is facing, y is height, z is ignored
 end
 
-function ComplexProjectile:SetOnLaunch(fn)
+function PL_ComplexProjectile:SetOnLaunch(fn)
 	self.onlaunchfn = fn
 end
 
-function ComplexProjectile:SetOnHit(fn)
+function PL_ComplexProjectile:SetOnHit(fn)
 	self.onhitfn = fn
 end
 
-function ComplexProjectile:GetHorizontalSpeed(distance)
+function PL_ComplexProjectile:GetHorizontalSpeed(distance)
 	return self.horizontalSpeed or Lerp(3, 12, distance/self.maxRange)
 end
 
-function ComplexProjectile:GetVerticalVelocity(distance)
+function PL_ComplexProjectile:GetVerticalVelocity(distance)
 	return ((self.gravity * distance)/2)/self:GetHorizontalSpeed(distance)
 end
 
-function ComplexProjectile:CalculateTrajectory(startPos, endPos, speed)
+function PL_ComplexProjectile:CalculateTrajectory(startPos, endPos, speed)
     local speedSq = speed * speed
     local g = -self.gravity
 
@@ -78,7 +77,7 @@ function ComplexProjectile:CalculateTrajectory(startPos, endPos, speed)
     self.velocity.y = math.sin(angle) * speed
 end
 
-function ComplexProjectile:Launch(targetPos, attacker)
+function PL_ComplexProjectile:Launch(targetPos, attacker)
 	local pos = self.inst:GetPosition()
 	self.attacker = attacker
 
@@ -111,19 +110,19 @@ function ComplexProjectile:Launch(targetPos, attacker)
 	self.inst:StartUpdatingComponent(self)
 end
 
-function ComplexProjectile:Hit(target)
+function PL_ComplexProjectile:Hit(target)
 	self.inst:StopUpdatingComponent(self)
 
-	self.inst.Physics:SetMotorVel(0,0,0)
+	self.inst.Physics:SetMotorVel(0, 0, 0)
 	self.inst.Physics:Stop()
-	self.velocity = Vector3(0,0,0)
+	self.velocity = Vector3(0, 0, 0)
 
 	if self.onhitfn then
 		self.onhitfn(self.inst,self.attacker, target)
 	end
 end
 
-function ComplexProjectile:OnUpdate(dt)
+function PL_ComplexProjectile:OnUpdate(dt)
 	self.inst.Physics:SetMotorVel(self.velocity.x, self.velocity.y, self.velocity.z)
 	self.velocity.y = self.velocity.y + (self.gravity * dt)
 	local pos = self.inst:GetPosition()
@@ -132,4 +131,4 @@ function ComplexProjectile:OnUpdate(dt)
 	end
 end
 
-return ComplexProjectile
+return PL_ComplexProjectile

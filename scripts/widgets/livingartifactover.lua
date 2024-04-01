@@ -23,7 +23,7 @@ local LivingArtifactOver = Class(Widget, function(self, owner)
 end)
 
 function LivingArtifactOver:UpdateState()
-    if ThePlayer:HasTag("ironlord") then
+    if self.owner:HasTag("ironlord") then
         self:TurnOn()
     else
         self:TurnOff()
@@ -69,10 +69,10 @@ function LivingArtifactOver:OnUpdate(dt)
 
     local r, g, b = 1, 1, 1
 
-    if ThePlayer:HasTag("ironlord") then
-        local living_artifact = ThePlayer.player_classified.living_artifact:value()
-        g = Remap(living_artifact._time_left:value(), TUNING.IRON_LORD_TIME, 0, 1, 0.1)
-        b = Remap(living_artifact._time_left:value(), TUNING.IRON_LORD_TIME, 0, 1, 0)
+    if self.owner:HasTag("ironlord") then
+        local time_left = self.owner.player_classified.ironlordtimeleft:value()
+        g = Remap(time_left, TUNING.IRON_LORD_TIME, 0, 1, 0.1)
+        b = Remap(time_left, TUNING.IRON_LORD_TIME, 0, 1, 0)
     end
 
     self.img:SetTint(r, g, b, self.currentalpha)

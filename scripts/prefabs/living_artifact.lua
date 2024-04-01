@@ -5,7 +5,7 @@ local ApplyDamageToEntities = AncientHulkUtil.ApplyDamageToEntities
 
 local assets =
 {
-	Asset("ANIM", "anim/living_artifact.zip"),
+    Asset("ANIM", "anim/living_artifact.zip"),
     Asset("ANIM", "anim/living_suit_build.zip"),
 }
 
@@ -44,14 +44,6 @@ local function DoDamage(inst, rad, startang, endang, spawnburns)
     end
 end
 
-local function IronLordhurt(inst, delta)
-    if delta < 0 then
-        inst.sg:PushEvent("attacked")
-    end
-
-    return true
-end
-
 local function SavePlayerData(player)
     local data = {}
 
@@ -81,59 +73,8 @@ local function LoadPlayerData(player, data)
     -- player.components.vision:CheckForGlasses()
 end
 
-local function ironactionstring(inst, action)
-    if action.action.id == "CHARGE_UP" then
-        return STRINGS.ACTIONS.CHARGE_UP
-    end
-    return STRINGS.ACTIONS.PUNCH
-end
-
-local function ArtifactActionButton(inst)
-
-    local action_target = FindEntity(inst, 6, function(guy) return (guy.components.door and not guy.components.door.disabled and (not guy.components.burnable or not guy.components.burnable:IsBurning())) or
-                                                             (guy.components.workable and guy.components.workable.workable and inst.components.worker:CanDoAction(guy.components.workable.action)) or
-                                                             (guy.components.hackable and guy.components.hackable:CanBeHacked() and inst.components.worker:CanDoAction(ACTIONS.HACK)) end)
-
-    if not inst.sg:HasStateTag("busy") and action_target then
-        if action_target.components.door and not action_target.components.door.disabled and (not action_target.components.burnable or not action_target.components.burnable:IsBurning()) then
-            return BufferedAction(inst, action_target, ACTIONS.USEDOOR)
-        elseif action_target.components.workable and action_target.components.workable.workable and action_target.components.workable.workleft > 0 then
-            return BufferedAction(inst, action_target, action_target.components.workable.action)
-        elseif action_target.components.hackable and action_target.components.hackable:CanBeHacked() and action_target.components.hackable.hacksleft > 0 then
-            return BufferedAction(inst, action_target, ACTIONS.HACK)
-        end
-    end
-
-end
-
-local function LeftClickPicker(inst, target_ent, pos)
-
-    if target_ent and target_ent.components.door and not target_ent.components.door.disabled and (not target_ent.components.burnable or not target_ent.components.burnable:IsBurning()) then
-        return inst.components.playeractionpicker:SortActionList({ACTIONS.USEDOOR}, target_ent, nil)
-    end
-
-    if inst.components.combat:CanTarget(target_ent) then
-        return inst.components.playeractionpicker:SortActionList({ACTIONS.ATTACK}, target_ent, nil)
-    end
-
-    if target_ent and target_ent.components.workable and target_ent.components.workable.workable 
-        and target_ent.components.workable.workleft > 0 and inst.components.worker and inst.components.worker:CanDoAction(target_ent.components.workable.action) then
-        return inst.components.playeractionpicker:SortActionList({target_ent.components.workable.action}, target_ent, nil)
-    end
-
-    if target_ent and target_ent.components.hackable and target_ent.components.hackable:CanBeHacked() and target_ent.components.hackable.hacksleft > 0 and inst.components.worker:CanDoAction(ACTIONS.HACK) then
-        return inst.components.playeractionpicker:SortActionList({ACTIONS.HACK}, target_ent, nil)
-    end
-end
-
-local function RightClickPicker(inst, target_ent, pos)
-    if not inst.sg:HasStateTag("charging") then
-        return inst.components.playeractionpicker:SortActionList({ACTIONS.CHARGE_UP}, nil, nil)
-    end
-    return {}
-end
-
 local function BecomeIronLord_post(inst)
+    inst.entity:SetParent(inst.player.entity)
     inst.player.components.skinner:SetSkinName("", nil, true)
     inst.player.components.skinner:ClearAllClothing()
     inst.player.AnimState:SetBuild("living_suit_build")
@@ -159,15 +100,12 @@ local function BecomeIronLord(inst, instant)
     player:AddTag("laser_immune")
     player:AddTag("mech")
 
-    player.player_classified.living_artifact:set(inst)
-
-    player.ActionStringOverride = ironactionstring
-    player.components.playercontroller.actionbuttonoverride = ArtifactActionButton
-    player.components.playeractionpicker.leftclickoverride = LeftClickPicker
-    player.components.playeractionpicker.rightclickoverride = RightClickPicker
+    player.player_classified.isironlord:set(true)
 
     player.components.combat:SetDefaultDamage(TUNING.IRON_LORD_DAMAGE)
-    player.components.inventory:DropEverything()
+
+    player.components.inventory:DropEverything(true, false)
+
     player.components.locomotor.runspeed = TUNING.WILSON_RUN_SPEED * 1.3
 
     player.components.grogginess:SetEnableSpeedMod(false)
@@ -176,11 +114,10 @@ local function BecomeIronLord(inst, instant)
         player.components.poisonable:SetBlockAll(true)
     end
 
-    player.components.temperature:SetTemp(20)
-    player:StopUpdatingComponent(player.components.temperature)
+    player.components.temperature:SetTemp(TUNING.STARTING_TEMP)
 
     player.components.health:SetPercent(1)
-    player.components.health.redirect = IronLordhurt
+    player.components.health.redirect = function() return true end
 
     if player.components.oldager then
         player:StopUpdatingComponent(player.components.oldager)
@@ -203,8 +140,6 @@ local function BecomeIronLord(inst, instant)
     -- player.components.vision.nearsighted = false
     -- player.components.vision:CheckForGlasses()
 
-    player:PushEvent("livingartifactoveron")
-
     inst.nightlight = SpawnPrefab("living_artifact_light")
     player:AddChild(inst.nightlight)
 
@@ -214,8 +149,6 @@ local function BecomeIronLord(inst, instant)
 
     inst:AddTag("notslippery")
     inst:AddTag("cantdrop")
-
-    inst:PushEvent("start_flashing")
 
     inst:AddComponent("reticule")
     inst.components.reticule.targetfn = function()
@@ -242,17 +175,11 @@ end
 
 local function Revert(inst)
     inst.nightlight:Remove()
-    inst:PushEvent("stop_flashing")
     inst.components.reticule:DestroyReticule()
 
     local player = inst.player
 
     LoadPlayerData(player, inst.player_data)
-
-    player.ActionStringOverride = nil
-    player.components.playercontroller.actionbuttonoverride = nil
-    player.components.playeractionpicker.leftclickoverride = nil
-    player.components.playeractionpicker.rightclickoverride = nil
 
     player.AnimState:SetBank("wilson")
     player.AnimState:Show("beard")
@@ -265,7 +192,7 @@ local function Revert(inst)
     player:RemoveTag("has_gasmask")
     player:RemoveTag("fireimmune")
 
-    player.player_classified.living_artifact:set(nil)
+    player.player_classified.isironlord:set(false)
 
     player:RemoveComponent("worker")
 
@@ -276,11 +203,10 @@ local function Revert(inst)
 
     player.components.grogginess:SetEnableSpeedMod(true)
 
-    player.components.moisture.moisture = 0
+    player.components.moisture:ForceDry(false)
 
     player.components.temperature:SetTemperature(TUNING.STARTING_TEMP)
     player.components.temperature:SetTemp(nil)
-    player:StartUpdatingComponent(player.components.temperature)
 
     if player.components.poisonable then
         player.components.poisonable:SetBlockAll(nil)
@@ -293,7 +219,6 @@ local function Revert(inst)
         player:StartUpdatingComponent(player.components.oldager)
     end
 
-    player:PushEvent("livingartifactoveroff")
     player:ClearBufferedAction()
     player:DoTaskInTime(0, function() player.sg:GoToState("bucked_post") end)
 
@@ -328,48 +253,7 @@ local function OnFinished(inst)
 end
 
 local function OnDelta(inst)
-    inst._time_left:set(inst.components.livingartifact.time_left)
-    inst.player:PushEvent("ironlorddelta", {percent = inst.components.livingartifact:GetPercent()})
-end
-
-local function DoFlashTask(inst)
-    local time = 0
-    local nextflash = 0
-    local intensity = 0
-
-    local per = inst._time_left:value()/TUNING.IRON_LORD_TIME
-    if per > 0.5 then
-        time = 1
-        nextflash = 2
-        intensity = 0
-    elseif per > 0.3 then
-        time = 0.5
-        nextflash = 1
-        intensity = 0.25
-    elseif per > 0.05 then
-        time = 0.3
-        nextflash = 0.6
-        intensity = 0.5
-    else
-        time = 0.13
-        nextflash = 0.26
-        intensity = 0.8
-    end
-
-    ThePlayer:PushEvent("livingartifactoverpulse", {time = time})
-    ThePlayer.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/common/crafted/iron_lord/pulse", {intensity = intensity})
-    inst.flash_task = inst:DoTaskInTime(nextflash, DoFlashTask)
-end
-
-local function OnStartFlashing(inst, data)
-    inst.flash_task = inst:DoTaskInTime(3, DoFlashTask)
-end
-
-local function OnStopFlashing(inst, data)
-    if inst.flash_task then
-        inst.flash_task:Cancel()
-        inst.flash_task = nil
-    end
+    inst.player.player_classified.ironlordtimeleft:set(inst.components.livingartifact.time_left)
 end
 
 local function OnSave(inst, data)
@@ -402,10 +286,10 @@ local function OnLoadPostPass(inst, newents, data)
 end
 
 local function fn()
-	local inst = CreateEntity()
+    local inst = CreateEntity()
 
-	inst.entity:AddTransform()
-	inst.entity:AddAnimState()
+    inst.entity:AddTransform()
+    inst.entity:AddAnimState()
     inst.entity:AddNetwork()
 
     MakeInventoryPhysics(inst)
@@ -416,15 +300,7 @@ local function fn()
     inst.AnimState:SetBuild("living_artifact")
     inst.AnimState:PlayAnimation("idle")
 
-    inst._time_left = net_float(inst.GUID, "ironlord_time_left")
-
     inst.entity:SetPristine()
-
-    if not TheNet:IsDedicated() then
-        -- Dedicated server does not need screen flashing
-        inst:ListenForEvent("start_flashing", OnStartFlashing)
-        inst:ListenForEvent("stop_flashing", OnStopFlashing)
-    end
 
     if not TheWorld.ismastersim then
         return inst
@@ -451,14 +327,7 @@ local function fn()
     inst.OnLoad = OnLoad
     inst.OnLoadPostPass = OnLoadPostPass
 
-    inst.Revert = Revert
-    inst.DoDamage = DoDamage
-
     return inst
-end
-
-local function displaynamefn(inst)
-	return ""
 end
 
 local function lightfn()
@@ -474,7 +343,8 @@ local function lightfn()
     inst.Light:SetIntensity(0.6)
     inst.Light:SetColour(245/255, 150/255, 0/255)
 
-	inst.displaynamefn = displaynamefn
+    inst:AddTag("NOCLICK")
+    inst:AddTag("NOBLOCK")
 
     inst.entity:SetPristine()
 

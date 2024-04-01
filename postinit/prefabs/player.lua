@@ -21,10 +21,6 @@ local function OnRespawnFromGhost(inst, data)
     end
 end
 
-local function OnIronLordOver(inst)
-    inst.sg:GoToState("explode")
-end
-
 AddPlayerPostInit(function(inst)
     if not TheWorld.ismastersim then
         return
@@ -34,11 +30,6 @@ AddPlayerPostInit(function(inst)
         inst:AddComponent("hayfever")
     end
 
-    -- if not inst.components.ironlord then
-    --     inst:AddComponent("ironlord")
-    -- end
-
     inst:ListenForEvent("death", OnDeath)
     inst:ListenForEvent("respawnfromghost", OnRespawnFromGhost)
-    --inst:ListenForEvent("ironlordover", OnIronLordOver)
 end)
