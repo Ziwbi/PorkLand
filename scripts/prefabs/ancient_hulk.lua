@@ -1,8 +1,8 @@
 local AncientHulkUtil = require("prefabs/ancient_hulk_util")
 
-local setfires = AncientHulkUtil.setfires
 local SetLightValueWithFade = AncientHulkUtil.SetLightValueWithFade
 local ApplyDamageToEntities = AncientHulkUtil.ApplyDamageToEntities
+local DoSectorAOE = AncientHulkUtil.DoSectorAOE
 
 local SHAKE_DIST = 40
 
@@ -78,43 +78,6 @@ end
 
 local function OnAttacked(inst, data)
     inst.components.combat:SetTarget(data.attacker)
-end
-
-local function DoDamage(inst, rad, startang, endang)
-    local targets = {}
-    local x, y, z = inst.Transform:GetWorldPosition()
-    local angle = nil
-    if startang and endang then
-        startang = startang + 90
-        endang = endang + 90
-
-        local down = TheCamera:GetDownVec()
-        angle = math.atan2(down.z, down.x)/DEGREES
-    end
-
-    setfires(x,y,z, rad)
-    for i, v in ipairs(TheSim:FindEntities(x, 0, z, rad, nil, { "laser", "DECOR", "INLIMBO" }, { "_combat", "pickable", "campfire", "CHOP_workable", "HAMMER_workable", "MINE_workable", "DIG_workable" })) do
-        local dodamage = true
-        if startang and endang then
-            local dir = inst:GetAngleToPoint(Vector3(v.Transform:GetWorldPosition()))
-
-            local angle_difference = angle - dir
-            while angle_difference > 450 do
-                angle_difference = angle_difference - 360
-            end
-            while angle_difference < 90 do
-                angle_difference = angle_difference + 360
-            end
-            if angle_difference < startang or angle_difference > endang then
-                dodamage = false
-            end
-        end
-        if dodamage then
-            inst.components.combat:EnableAreaDamage(false)
-            targets = ApplyDamageToEntities(inst, v, targets, rad)
-            inst.components.combat:EnableAreaDamage(true)
-        end
-    end
 end
 
 local function OnCollide(inst, other)
@@ -265,8 +228,6 @@ local function fn()
 
     inst.orbs = 2
 
-    inst.DoDamage = DoDamage
-
     inst:ListenForEvent("attacked", OnAttacked)
     inst:ListenForEvent("remove", function() inst.SoundEmitter:KillSound("gears") end)
 
@@ -324,7 +285,7 @@ local function OnNearMine(inst, ents)
 
         local ring = SpawnPrefab("laser_ring")
         ring.Transform:SetPosition(inst.Transform:GetWorldPosition())
-        inst:DoTaskInTime(0.3, function() DoDamage(inst, 3.5) inst:Remove() end)
+        inst:DoTaskInTime(0.3, function() DoSectorAOE(inst, 3.5) inst:Remove() end)
 
         local explosion = SpawnPrefab("laser_explosion")
         explosion.Transform:SetPosition(inst.Transform:GetWorldPosition())
@@ -401,7 +362,7 @@ local function OnHitOrb(inst, dist)
 
     local ring = SpawnPrefab("laser_ring")
     ring.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    inst:DoTaskInTime(0.3, function() DoDamage(inst, 3.5) end)
+    inst:DoTaskInTime(0.3, function() DoSectorAOE(inst, 3.5) end)
     inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/smash_2")
 end
 
@@ -531,7 +492,7 @@ local function OnCollidecharge(inst, other)
 
     local ring = SpawnPrefab("laser_ring")
     ring.Transform:SetPosition(inst.Transform:GetWorldPosition())
-    inst:DoTaskInTime(0.3, function() DoDamage(inst, 3.5) end)
+    inst:DoTaskInTime(0.3, function() DoSectorAOE(inst, 3.5) end)
     inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/smash_2")
 end
 

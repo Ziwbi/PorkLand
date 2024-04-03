@@ -1,4 +1,4 @@
-local function setfires(x, y, z, rad)
+local function SetFires(x, y, z, rad)
     for i, v in ipairs(TheSim:FindEntities(x, 0, z, rad, nil, { "laser", "DECOR", "INLIMBO" })) do
         if v.components.burnable then
             v.components.burnable:Ignite()
@@ -6,88 +6,47 @@ local function setfires(x, y, z, rad)
     end
 end
 
-local function DoDamage(inst, rad)
-    local targets = {}
-    local x, y, z = inst.Transform:GetWorldPosition()
+local function is_valid_target(inst, v)
+    return not (v:HasTag("laser") or v:HasTag("laser_immune"))
+end
 
-    setfires(x,y,z, rad)
-    for i, v in ipairs(TheSim:FindEntities(x, 0, z, rad, nil, { "laser", "DECOR", "INLIMBO" })) do  --  { "_combat", "pickable", "campfire", "CHOP_workable", "HAMMER_workable", "MINE_workable", "DIG_workable" }
-        if not targets[v] and v:IsValid() and not v:IsInLimbo() and not (v.components.health ~= nil and v.components.health:IsDead()) and not v:HasTag("laser_immune") then
-            local vradius = 0
-            if v.Physics then
-                vradius = v.Physics:GetRadius()
+local function OnAttacked(inst, v)
+    if v.AnimState then
+        SpawnPrefab("ancient_hulk_laserhit"):SetTarget(v) 
+    end
+    if not v.components.health:IsDead() then
+        if v.components.freezable ~= nil then
+            if v.components.freezable:IsFrozen() then
+                v.components.freezable:Unfreeze()
+            elseif v.components.freezable.coldness > 0 then
+                v.components.freezable:AddColdness(-2)
             end
-
-            local range = rad + vradius
-            if v:GetDistanceSqToPoint(Vector3(x, y, z)) < range * range then
-                local isworkable = false
-                if v.components.workable ~= nil then
-                    local work_action = v.components.workable:GetWorkAction()
-                    --V2C: nil action for campfires
-                    isworkable =
-                        (   work_action == nil and v:HasTag("campfire")    ) or
-
-                            (   work_action == ACTIONS.CHOP or
-                                work_action == ACTIONS.HAMMER or
-                                work_action == ACTIONS.MINE or
-                                work_action == ACTIONS.DIG
-                            )
-                end
-                if isworkable then
-                    targets[v] = true
-                    v:DoTaskInTime(0.6, function()
-                        if v.components.workable then
-                            v.components.workable:Destroy(inst)
-                            local vx,vy,vz = v.Transform:GetWorldPosition()
-                            v:DoTaskInTime(0.3, function() setfires(vx,vy,vz,1) end)
-                        end
-                     end)
-                    if v:IsValid() and v:HasTag("stump") then
-                       -- v:Remove()
-                    end
-                elseif v.components.pickable ~= nil
-                    and v.components.pickable:CanBePicked()
-                    and not v:HasTag("intense") then
-                    targets[v] = true
-                    local num = v.components.pickable.numtoharvest or 1
-                    local product = v.components.pickable.product
-                    local x1, y1, z1 = v.Transform:GetWorldPosition()
-                    v.components.pickable:Pick(inst) -- only calling this to trigger callbacks on the object
-                    if product ~= nil and num > 0 then
-                        for i = 1, num do
-                            local loot = SpawnPrefab(product)
-                            loot.Transform:SetPosition(x1, 0, z1)
-                            targets[loot] = true
-                        end
-                    end
-
-                elseif v.components.health then
-                    inst.components.combat:DoAttack(v)
-                    if v:IsValid() then
-                        if not v.components.health or not v.components.health:IsDead() then
-                            if v.components.freezable ~= nil then
-                                if v.components.freezable:IsFrozen() then
-                                    v.components.freezable:Unfreeze()
-                                elseif v.components.freezable.coldness > 0 then
-                                    v.components.freezable:AddColdness(-2)
-                                end
-                            end
-                            if v.components.temperature ~= nil then
-                                local maxtemp = math.min(v.components.temperature:GetMax(), 10)
-                                local curtemp = v.components.temperature:GetCurrent()
-                                if maxtemp > curtemp then
-                                    v.components.temperature:DoDelta(math.min(10, maxtemp - curtemp))
-                                end
-                            end
-                        end
-                    end
-                end
-                if v:IsValid() and v.AnimState then
-                    SpawnPrefab("ancient_hulk_laserhit"):SetTarget(v)
-                end
+        end
+        if v.components.temperature ~= nil then
+            local maxtemp = math.min(v.components.temperature:GetMax(), 10)
+            local curtemp = v.components.temperature:GetCurrent()
+            if maxtemp > curtemp then
+                v.components.temperature:DoDelta(math.min(10, maxtemp - curtemp))
             end
         end
     end
+end
+
+local function OnWorked(inst, v)
+    local x, y, z = inst.Transform:GetWorldPosition()
+    v:DoTaskInTime(0.3, function() SetFires(x, y, z, 1) end)
+end
+
+local function DoCircularAOE(inst, radius)
+    local x, y, z = inst.Transform:GetWorldPosition()
+    SetFires(x, y, z, radius)
+    DoCircularAOEDamageAndDestroy(inst, {damage_radius = radius, onattackedfn = OnAttacked, onworkedfn = OnWorked, validfn = is_valid_target})
+end
+
+local function DoSectorAOE(inst, radius, start_angle, end_angle)
+    local x, y, z = inst.Transform:GetWorldPosition()
+    SetFires(x, y, z, radius)
+    DoSectorAOEDamageAndDestroy(inst, {damage_radius = radius, start_angle = start_angle, end_angle = end_angle, onattackedfn = OnAttacked, validfn = is_valid_target})
 end
 
 local function UpdateHit(inst)
@@ -213,8 +172,6 @@ local function SetLightColour(inst, val)
         inst.Light:SetColour(val, 0, 0)
     end
 end
-
----Ancient hulk---
 
 local function SpawnBarrier(inst, pt)
     local angle = 0
@@ -394,20 +351,18 @@ local function DropAncientRobots(inst)
 
         partprop.Transform:SetPosition( (loc.x-(w/2)) *4 -4,0, (loc.z-(h/2)) *4-4 )
 
-        inst.DoDamage(partprop, 5)
+        DoCircularAOE(partprop, 5)
     end
 end
 
 local function ShootProjectile(inst, targetpos)
-    local speed =  60
-
     local projectile = SpawnPrefab("ancient_hulk_orb")
     projectile.primed = false
     projectile.AnimState:PlayAnimation("spin_loop",true)
 
     local pt = inst.shotspawn:GetPosition()
     projectile.Transform:SetPosition(pt.x, pt.y, pt.z)
-    projectile.components.pl_complexprojectile:SetHorizontalSpeed(speed)
+    projectile.components.pl_complexprojectile:SetHorizontalSpeed(60)
     projectile.components.pl_complexprojectile:SetGravity(-25)
     projectile.components.pl_complexprojectile:Launch(targetpos, inst, inst)
     projectile.owner = inst
@@ -449,7 +404,7 @@ local function ApplyDamageToEntities(inst,ent, targets, rad, hit)
                     if v.components.workable then
                         v.components.workable:Destroy(inst)
                         local vx,vy,vz = v.Transform:GetWorldPosition()
-                        v:DoTaskInTime(0.3, function() setfires(vx,vy,vz,1) end)
+                        v:DoTaskInTime(0.3, function() SetFires(vx,vy,vz,1) end)
                     end
                  end)
             elseif v.components.pickable ~= nil
@@ -499,8 +454,8 @@ local function ApplyDamageToEntities(inst,ent, targets, rad, hit)
 end
 
 return {
-    setfires = setfires,
-    DoDamage = DoDamage,
+    SetFires = SetFires,
+    DoDamage = DoCircularAOE,
     UpdateHit = UpdateHit,
     powerglow = powerglow,
     SpawnLaser = SpawnLaser,
@@ -514,4 +469,5 @@ return {
     ShootProjectile = ShootProjectile,
 
     ApplyDamageToEntities = ApplyDamageToEntities,
+    DoSectorAOE = DoSectorAOE,
 }

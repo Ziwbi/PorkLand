@@ -5,6 +5,7 @@ local AncientHulkUtil = require("prefabs/ancient_hulk_util")
 local SpawnBarrier = AncientHulkUtil.SpawnBarrier
 local DropAncientRobots = AncientHulkUtil.DropAncientRobots
 local ShootProjectile = AncientHulkUtil.ShootProjectile
+local DoSectorAOE = AncientHulkUtil.DoSectorAOE
 
 local SHAKE_DIST = 40
 local BEAMRAD = 7
@@ -284,7 +285,7 @@ local states =
                     head.sg:GoToState("fall")
                 end)
 
-                inst.DoDamage(inst, 6) -- TODO
+                DoSectorAOE(inst, 6)
                 inst.components.lootdropper:DropLoot()
                 DropAncientRobots(inst)
             end),
@@ -346,20 +347,14 @@ local states =
 
             TimeEvent(19 * FRAMES, function(inst) inst.SoundEmitter:SetParameter("gears", "intensity", 0.2) end),
 
-            TimeEvent(5 * FRAMES, function(inst)
-                inst.DoDamage(inst, 4)
-            end),
+            TimeEvent(5 * FRAMES, function(inst) DoSectorAOE(inst, 4) end),
             TimeEvent(10 * FRAMES, function(inst)
                 inst.Physics:SetActive(false)
                 inst.DynamicShadow:Enable(false)
-                inst.DoDamage(inst, 5)
+                DoSectorAOE(inst, 5)
             end),
-            TimeEvent(15 * FRAMES, function(inst)
-                inst.DoDamage(inst, 5)
-            end),
-            TimeEvent(20 * FRAMES, function(inst)
-                inst.DoDamage(inst, 4)
-            end),
+            TimeEvent(15 * FRAMES, function(inst) DoSectorAOE(inst, 5) end),
+            TimeEvent(20 * FRAMES, function(inst) DoSectorAOE(inst, 4) end),
         },
     },
 
@@ -589,46 +584,46 @@ local states =
             TimeEvent(51 * FRAMES, function(inst) TheMixer:PopMix("boom") end),
 
             TimeEvent(37 * FRAMES, function(inst)
-                inst.DoDamage(inst,BEAMRAD,0,45)
+                DoSectorAOE(inst,BEAMRAD,0,45)
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 0})
                 spawnburns(inst,BEAMRAD,0,45,5)
             end),
             TimeEvent(39 * FRAMES, function(inst)
-                inst.DoDamage(inst,BEAMRAD,45,90)
+                DoSectorAOE(inst,BEAMRAD,45,90)
                 spawnburns(inst,BEAMRAD,45,90,5)
             end),
             TimeEvent(40 * FRAMES, function(inst)
-                inst.DoDamage(inst,BEAMRAD,90,135)
+                DoSectorAOE(inst,BEAMRAD,90,135)
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = .3})
                 spawnburns(inst,BEAMRAD,90,135,5)
             end),
             TimeEvent(41 * FRAMES, function(inst)
-                inst.DoDamage(inst,BEAMRAD,135,180)
+                DoSectorAOE(inst,BEAMRAD,135,180)
 
                 spawnburns(inst,BEAMRAD,135,180,5)
             end),
             TimeEvent(42 * FRAMES, function(inst)
-                inst.DoDamage(inst,BEAMRAD,180,225)
+                DoSectorAOE(inst,BEAMRAD,180,225)
 
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 0.5})
                 spawnburns(inst,BEAMRAD,180,225,5)
             end),
             TimeEvent(45 * FRAMES, function(inst)
-                inst.DoDamage(inst,BEAMRAD,225,270)
+                DoSectorAOE(inst,BEAMRAD,225,270)
 
                 spawnburns(inst,BEAMRAD,225,270,5)
             end),
             TimeEvent(47 * FRAMES, function(inst)
-                inst.DoDamage(inst,BEAMRAD,270,315)
+                DoSectorAOE(inst,BEAMRAD,270,315)
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity= 0.7})
                 spawnburns(inst,BEAMRAD,270,315,5)
             end),
             TimeEvent(48 * FRAMES, function(inst)
-                inst.DoDamage(inst,BEAMRAD,315,360)
+                DoSectorAOE(inst,BEAMRAD,315,360)
                 spawnburns(inst,BEAMRAD,315,360,5)
             end),
             TimeEvent(50 * FRAMES, function(inst)
-                inst.DoDamage(inst,BEAMRAD,0,45)
+                DoSectorAOE(inst,BEAMRAD,0,45)
 
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity= 1})
                 spawnburns(inst,BEAMRAD,0,45,5)

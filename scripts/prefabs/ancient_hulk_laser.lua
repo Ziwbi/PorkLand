@@ -1,6 +1,6 @@
 local AncientHulkUtil = require("prefabs/ancient_hulk_util")
 
-local SetFires = AncientHulkUtil.setfires
+local SetFires = AncientHulkUtil.SetFires
 
 local assets =
 {
@@ -24,7 +24,6 @@ local prefabs =
     "ancient_hulk_laserhit",
 }
 
-local LAUNCH_SPEED = .2
 local RADIUS = .7
 
 local function SetLightRadius(inst, radius)
@@ -35,12 +34,32 @@ local function DisableLight(inst)
     inst.Light:Enable(false)
 end
 
-local DAMAGE_CANT_TAGS = { "playerghost", "INLIMBO", --[["NOCLICK",]] "DECOR", "INLIMBO" }
-local DAMAGE_ONEOF_TAGS = { "_combat", "pickable", "NPC_workable", "CHOP_workable", "HAMMER_workable", "MINE_workable", "DIG_workable" }
-local LAUNCH_MUST_TAGS = { "_inventoryitem" }
-local LAUNCH_CANT_TAGS = { "locomotor", "INLIMBO" }
+local function OnAttacked(inst, v)
+    SpawnPrefab("ancient_hulk_laserhit"):SetTarget(v)
+    if not v.components.health:IsDead() then
+        if v.components.freezable ~= nil then
+            if v.components.freezable:IsFrozen() then
+                v.components.freezable:Unfreeze()
+            elseif v.components.freezable.coldness > 0 then
+                v.components.freezable:AddColdness(-2)
+            end
+        end
+        if v.components.temperature ~= nil then
+            local maxtemp = math.min(v.components.temperature:GetMax(), 10)
+            local curtemp = v.components.temperature:GetCurrent()
+            if maxtemp > curtemp then
+                v.components.temperature:DoDelta(math.min(10, maxtemp - curtemp))
+            end
+        end
+    end
+end
 
-local function DoDamage(inst, targets, skiptoss)
+local function OnWorked(inst, v)
+    local x, y, z = inst.Transform:GetWorldPosition()
+    v:DoTaskInTime(0, function() SetFires(x, y, z, RADIUS) end)
+end
+
+local function LaserAOE(inst, targets, skiptoss)
     inst.task = nil
 
     local x, y, z = inst.Transform:GetWorldPosition()
@@ -56,114 +75,23 @@ local function DoDamage(inst, targets, skiptoss)
         SpawnPrefab("ancient_hulk_laserscorch").Transform:SetPosition(x, 0, z)
         local fx = SpawnPrefab("ancient_hulk_lasertrail")
         fx.Transform:SetPosition(x, 0, z)
-        fx:FastForward(GetRandomMinMax(.3, .7))
+        fx:FastForward(GetRandomMinMax(0.3, 0.7))
     else
         inst:DoTaskInTime(2 * FRAMES, inst.Remove)
     end
 
     SetFires(x, y, z, RADIUS)
 
-    inst.components.combat.ignorehitrange = true
-    for i, v in ipairs(TheSim:FindEntities(x, 0, z, RADIUS + 3, nil, DAMAGE_CANT_TAGS, DAMAGE_ONEOF_TAGS)) do
-        if not targets[v] and v:IsValid() and not v:IsInLimbo() and not (v.components.health ~= nil and v.components.health:IsDead()) then
-            local vradius = v:GetPhysicsRadius(.5)
-            local range = RADIUS + vradius
-            if v:GetDistanceSqToPoint(x, y, z) < range * range then
-                local isworkable = false
-                if v.components.workable ~= nil then
-                    local work_action = v.components.workable:GetWorkAction()
-                    --V2C: nil action for NPC_workable (e.g. campfires)
-                    isworkable =
-                        (   work_action == nil and v:HasTag("NPC_workable") ) or
-                        (   v.components.workable:CanBeWorked() and
-                            (   work_action == ACTIONS.CHOP or
-                                work_action == ACTIONS.HAMMER or
-                                work_action == ACTIONS.MINE or
-                                (   work_action == ACTIONS.DIG and
-                                    v.components.spawner == nil and
-                                    v.components.childspawner == nil
-                                )
-                            )
-                        )
-                end
-                if isworkable then
-                    targets[v] = true
-                    v.components.workable:Destroy(inst)
-                    v:DoTaskInTime(0, function() SetFires(x, y, z, RADIUS) end)
-                    if v:IsValid() and v:HasTag("stump") then
-                        v:Remove()
-                    end
-                elseif v.components.pickable ~= nil
-                    and v.components.pickable:CanBePicked()
-                    and not v:HasTag("intense") then
-                    targets[v] = true
-					local success, loots = v.components.pickable:Pick(inst)
-					if loots then
-						for _, vv in ipairs(loots) do
-							skiptoss[vv] = true
-							targets[vv] = true
-							Launch(vv, inst, LAUNCH_SPEED)
-                        end
-                    end
-                elseif inst.components.combat:CanTarget(v) then
-                    targets[v] = true
-                    if inst.caster ~= nil and inst.caster:IsValid() then
-                        inst.caster.components.combat.ignorehitrange = true
-                        inst.caster.components.combat:DoAttack(v)
-                        inst.caster.components.combat.ignorehitrange = false
-                    else
-                        inst.components.combat:DoAttack(v)
-                    end
-                    if v:IsValid() then
-                        SpawnPrefab("ancient_hulk_laserhit"):SetTarget(v)
-                        if not v.components.health:IsDead() then
-                            if v.components.freezable ~= nil then
-                                if v.components.freezable:IsFrozen() then
-                                    v.components.freezable:Unfreeze()
-                                elseif v.components.freezable.coldness > 0 then
-                                    v.components.freezable:AddColdness(-2)
-                                end
-                            end
-                            if v.components.temperature ~= nil then
-                                local maxtemp = math.min(v.components.temperature:GetMax(), 10)
-                                local curtemp = v.components.temperature:GetCurrent()
-                                if maxtemp > curtemp then
-                                    v.components.temperature:DoDelta(math.min(10, maxtemp - curtemp))
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    inst.components.combat.ignorehitrange = false
-    for i, v in ipairs(TheSim:FindEntities(x, 0, z, RADIUS + 3, LAUNCH_MUST_TAGS, LAUNCH_CANT_TAGS)) do
-        if not skiptoss[v] then
-            local range = RADIUS + v:GetPhysicsRadius(.5)
-            if v:GetDistanceSqToPoint(x, y, z) < range * range then
-                if v.components.mine ~= nil then
-                    targets[v] = true
-                    skiptoss[v] = true
-                    v.components.mine:Deactivate()
-                end
-                if not v.components.inventoryitem.nobounce and v.Physics ~= nil and v.Physics:IsActive() then
-                    targets[v] = true
-                    skiptoss[v] = true
-                    Launch(v, inst, LAUNCH_SPEED)
-                end
-            end
-        end
-    end
+    DoCircularAOEDamageAndDestroy(inst, {damage_radius = RADIUS, should_launch = true, onattackedfn = OnAttacked, onworkedfn = OnWorked}, targets, skiptoss)
 end
 
 local function Trigger(inst, delay, targets, skiptoss)
     if inst.task ~= nil then
         inst.task:Cancel()
         if (delay or 0) > 0 then
-            inst.task = inst:DoTaskInTime(delay, DoDamage, targets or {}, skiptoss or {})
+            inst.task = inst:DoTaskInTime(delay, LaserAOE, targets, skiptoss)
         else
-            DoDamage(inst, targets or {}, skiptoss or {})
+            LaserAOE(inst, targets, skiptoss)
         end
     end
 end

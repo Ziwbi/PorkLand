@@ -1,48 +1,8 @@
-local AncientHulkUtil = require("prefabs/ancient_hulk_util")
-
-local setfires = AncientHulkUtil.setfires
-local ApplyDamageToEntities = AncientHulkUtil.ApplyDamageToEntities
-
 local assets =
 {
     Asset("ANIM", "anim/living_artifact.zip"),
     Asset("ANIM", "anim/living_suit_build.zip"),
 }
-
-local function DoDamage(inst, rad, startang, endang, spawnburns)
-    local targets = {}
-    local x, y, z = GetPlayer().Transform:GetWorldPosition()
-    local angle = nil
-    if startang and endang then
-        startang = startang + 90
-        endang = endang + 90
-
-        local down = TheCamera:GetDownVec()
-        angle = math.atan2(down.z, down.x)/DEGREES
-    end
-
-    setfires(x,y,z, rad)
-    for i, v in ipairs(TheSim:FindEntities(x, 0, z, rad, nil, { "laser", "DECOR", "INLIMBO" })) do  --  { "_combat", "pickable", "campfire", "CHOP_workable", "HAMMER_workable", "MINE_workable", "DIG_workable" }
-        local dodamage = true
-        if startang and endang then
-            local dir = inst:GetAngleToPoint(Vector3(v.Transform:GetWorldPosition()))
-
-            local dif = angle - dir
-            while dif > 450 do
-                dif = dif - 360
-            end
-            while dif < 90 do
-                dif = dif + 360
-            end
-            if dif < startang or dif > endang then
-                dodamage = nil
-            end
-        end
-        if dodamage then
-            targets = ApplyDamageToEntities(inst,v, targets, rad)
-        end
-    end
-end
 
 local function SavePlayerData(player)
     local data = {}

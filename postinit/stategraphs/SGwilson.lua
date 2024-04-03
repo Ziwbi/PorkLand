@@ -4,6 +4,7 @@ local AddStategraphActionHandler = AddStategraphActionHandler
 local AddStategraphPostInit = AddStategraphPostInit
 GLOBAL.setfenv(1, GLOBAL)
 
+local DoSectorAOE = require("prefabs/ancient_hulk_util").DoSectorAOE
 require("stategraphs/commonstates")
 
 local function shoot(inst, is_full_charge)
@@ -770,7 +771,7 @@ local states = {
             TimeEvent(52 * FRAMES, function(inst)
                 local explosion = SpawnPrefab("living_suit_explode_fx")
                 explosion.Transform:SetPosition(inst.Transform:GetWorldPosition())
-                --inst.livingartifact.DoDamage(inst.livingartifact, 5)
+                DoSectorAOE(inst, 5)
             end),
         },
 
