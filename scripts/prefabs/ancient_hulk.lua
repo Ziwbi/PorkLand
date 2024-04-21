@@ -36,7 +36,7 @@ local prefabs =
 
 SetSharedLootTable("ancient_hulk",
 {
-    --{"living_artifact_blueprint",   1.00},
+    {"living_artifact_blueprint",   1.00},
     {"infused_iron",                1.00},
     {"infused_iron",                1.00},
     {"infused_iron",                1.00},

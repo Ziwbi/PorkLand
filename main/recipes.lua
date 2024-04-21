@@ -57,3 +57,8 @@ SortAfter("goldpan", "goldenpitchfork", "TOOLS")
 AddRecipe2("basefan", {Ingredient("alloy", 2), Ingredient("transistor", 2), Ingredient("gears", 1)}, TECH.SCIENCE_TWO, {placer = "basefan_placer"}, {"STRUCTURES", "RAIN"})
 SortBefore("basefan", "firesuppressor", "STRUCTURES")
 SortBefore("basefan", "rainometer", "RAIN")
+
+AddRecipe2("living_artifact", {Ingredient("infused_iron", 6), Ingredient("waterdrop", 1)}, TECH.LOST, {}, {"MAGIC", "ARMOUR", "WEAPONS"})
+SortAfter("living_artifact", "nightmarefuel", "MAGIC")
+SortAfter("living_artifact", nil, "ARMOUR")
+SortAfter("living_artifact", nil, "WEAPONS")

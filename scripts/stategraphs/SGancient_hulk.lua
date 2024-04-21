@@ -11,24 +11,17 @@ local SHAKE_DIST = 40
 local BEAMRAD = 7
 
 local function teleport(inst)
-    inst.teleporttime = nil
-    local pt = Vector3(inst.Transform:GetWorldPosition())
-
-    if inst.components.combat.target then
-        pt = Vector3(inst.components.combat.target.Transform:GetWorldPosition())
-    end
+    local pt = inst.components.combat.target and inst.components.combat.target:GetPosition() or inst:GetPosition()
 
     local theta = math.random() * 2 * PI
 
-    local offset = nil
+    local offset
     while not offset do
-        offset = FindWalkableOffset(pt, theta, 12 + math.random()*5, 12, true) --12
+        offset = FindWalkableOffset(pt, theta, 12 + math.random() * 5, 12, true)
     end
 
-    pt.x = pt.x + offset.x
-    pt.z = pt.z + offset.z
     inst.Physics:SetActive(true)
-    inst.Transform:SetPosition(pt.x,0,pt.z)
+    inst.Transform:SetPosition(pt.x + offset.x, 0, pt.z + offset.z)
     inst.sg:GoToState("telportin")
 end
 
@@ -65,9 +58,7 @@ local function spawnburns(inst,rad,startangle,endangle,num)
     endangle = endangle *DEGREES
     local pt = Vector3(inst.Transform:GetWorldPosition())
     local down = TheCamera:GetDownVec()
-    local angle = math.atan2(down.z, down.x)
-
-    local angle = angle + startangle
+    local angle = math.atan2(down.z, down.x) + startangle
     local angdiff = (endangle-startangle)/num
     for i=1,num do
         local offset = Vector3(rad * math.cos( angle ), 0, rad * math.sin( angle ))
@@ -96,9 +87,7 @@ local events =
     CommonHandlers.OnAttack(),
     CommonHandlers.OnAttacked(),
 
-    EventHandler("activate", function(inst)
-        inst.sg:GoToState("activate")
-    end),
+    EventHandler("activate", function(inst) inst.sg:GoToState("activate") end),
 }
 
 local states =
@@ -594,7 +583,7 @@ local states =
             end),
             TimeEvent(40 * FRAMES, function(inst)
                 DoSectorAOE(inst,BEAMRAD,90,135)
-                inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = .3})
+                inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 0.3})
                 spawnburns(inst,BEAMRAD,90,135,5)
             end),
             TimeEvent(41 * FRAMES, function(inst)
@@ -615,7 +604,7 @@ local states =
             end),
             TimeEvent(47 * FRAMES, function(inst)
                 DoSectorAOE(inst,BEAMRAD,270,315)
-                inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity= 0.7})
+                inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 0.7})
                 spawnburns(inst,BEAMRAD,270,315,5)
             end),
             TimeEvent(48 * FRAMES, function(inst)
@@ -625,7 +614,7 @@ local states =
             TimeEvent(50 * FRAMES, function(inst)
                 DoSectorAOE(inst,BEAMRAD,0,45)
 
-                inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity= 1})
+                inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 1})
                 spawnburns(inst,BEAMRAD,0,45,5)
             end),
         },
@@ -633,7 +622,7 @@ local states =
         onexit = function(inst)
             inst.Transform:SetSixFaced()
             inst.components.timer:StartTimer("spin_cd", 10)
-            inst.components.combat.playerdamagepercent = .5
+            inst.components.combat.playerdamagepercent = 0.5
         end,
 
         events =

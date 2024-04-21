@@ -68,6 +68,7 @@ local actionhandlers = {
         end
     end),
     ActionHandler(ACTIONS.USE_LIVING_ARTIFACT, "give"),
+    ActionHandler(ACTIONS.CHARGE_UP, "ironlord_charge"),
 }
 
 local eventhandlers = {
@@ -642,17 +643,21 @@ local states = {
 
             inst.sg.statemem.ready_to_shoot = false
             inst.sg.statemem.should_shoot = false
+
+            inst.sg.statemem.control_handler = TheInput:AddControlHandler(CONTROL_SECONDARY, function(down)
+                if not down then
+                    inst.sg.statemem.should_shoot = true
+                    inst.sg.statemem.control_handler:Remove()
+                end
+            end)
         end,
 
         onexit = function(inst)
             inst:ClearBufferedAction()
+            inst.sg.statemem.control_handler:Remove()
         end,
 
         onupdate = function(inst)
-            if not (TheInput:IsKeyDown(CONTROL_SECONDARY) or TheInput:IsKeyDown(CONTROL_CONTROLLER_ALTACTION)) then
-                inst.sg.statemem.should_shoot = true
-            end
-
             if inst.sg.statemem.should_shoot and inst.sg.statemem.ready_to_shoot then
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/common/crafted/iron_lord/smallshot", {timeoffset = math.random()})
                 inst.SoundEmitter:KillSound("chargedup")
@@ -677,7 +682,7 @@ local states = {
     },
 
     State{
-        name = "ironlord_chage_full",
+        name = "ironlord_charge_full",
         tags = {"busy", "doing"},
 
         onenter = function(inst)
@@ -688,18 +693,22 @@ local states = {
 
             inst.sg.statemem.ready_to_shoot = false
             inst.sg.statemem.should_shoot = false
+
+            inst.sg.statemem.control_handler = TheInput:AddControlHandler(CONTROL_SECONDARY, function(down)
+                if not down then
+                    inst.sg.statemem.should_shoot = true
+                    inst.sg.statemem.control_handler:Remove()
+                end
+            end)
         end,
 
         onexit = function(inst)
             inst:ClearBufferedAction()
             inst.SoundEmitter:KillSound("chargedup")
+            inst.sg.statemem.control_handler:Remove()
         end,
 
         onupdate = function(inst)
-            if not (TheInput:IsKeyDown(CONTROL_SECONDARY) or TheInput:IsKeyDown(CONTROL_CONTROLLER_ALTACTION)) then
-                inst.sg.statemem.should_shoot = true
-            end
-
             if inst.sg.statemem.should_shoot and inst.sg.statemem.ready_to_shoot then
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser",  {intensity = math.random(0.7, 1)})
 
@@ -823,10 +832,9 @@ local states = {
 
         timeline =
         {
-            TimeEvent(0 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch_pre") end),
-            TimeEvent(8 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch") end),
-            TimeEvent(6 * FRAMES, function(inst) inst:PerformBufferedAction() end),
-            TimeEvent(7 * FRAMES, function(inst) inst.sg:RemoveStateTag("attack") inst.sg:RemoveStateTag("busy") inst.sg:AddStateTag("idle") end),
+            TimeEvent(0  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch_pre") end),
+            TimeEvent(8  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch") inst:PerformBufferedAction() end),
+            TimeEvent(14 * FRAMES, function(inst) inst.sg:RemoveStateTag("attack") inst.sg:RemoveStateTag("busy") inst.sg:AddStateTag("idle") end),
         },
 
         events =

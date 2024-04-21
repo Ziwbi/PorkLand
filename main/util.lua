@@ -24,13 +24,12 @@ local function is_valid_work_target(target)
         [ACTIONS.HAMMER] = true,
         [ACTIONS.MINE] = true,
         [ACTIONS.HACK] = true,
+        [ACTIONS.DIG] = true,
     }
 
     local work_action = target.components.workable:GetWorkAction()
     --V2C: nil action for NPC_workable (e.g. campfires)
-    return (not work_action and target:HasTag("NPC_workable")) or
-        (target.components.workable:CanBeWorked() and (valid_work_actions[work_action]
-            or (work_action == ACTIONS.DIG and not target.components.spawner and not target.components.childspawner)))
+    return (not work_action and target:HasTag("NPC_workable")) or (target.components.workable:CanBeWorked() and valid_work_actions[work_action])
 end
 
 ---@param params table configure launch speed, launch range, damage range etc

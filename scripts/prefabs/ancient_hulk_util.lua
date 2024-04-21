@@ -12,7 +12,7 @@ end
 
 local function OnAttacked(inst, v)
     if v.AnimState then
-        SpawnPrefab("ancient_hulk_laserhit"):SetTarget(v) 
+        SpawnPrefab("ancient_hulk_laserhit"):SetTarget(v)
     end
     if not v.components.health:IsDead() then
         if v.components.freezable ~= nil then
@@ -46,7 +46,7 @@ end
 local function DoSectorAOE(inst, radius, start_angle, end_angle)
     local x, y, z = inst.Transform:GetWorldPosition()
     SetFires(x, y, z, radius)
-    DoSectorAOEDamageAndDestroy(inst, {damage_radius = radius, start_angle = start_angle, end_angle = end_angle, onattackedfn = OnAttacked, validfn = is_valid_target})
+    DoSectorAOEDamageAndDestroy(inst, {damage_radius = radius, start_angle = start_angle, end_angle = end_angle, onattackedfn = OnAttacked, onworkedfn = OnWorked, validfn = is_valid_target})
 end
 
 local function UpdateHit(inst)
@@ -94,25 +94,22 @@ local function SpawnLaser(inst)
     local yt = inst.sg.statemem.targetpos.y
     local zt = inst.sg.statemem.targetpos.z
 
-    local dist =  math.sqrt(inst:GetDistanceSqToPoint(  Vector3(xt, yt, zt)  )) -3--  math.sqrt( ) ) - 2
-
+    local dist =  math.sqrt(inst:GetDistanceSqToPoint(Vector3(xt, yt, zt))) -3
     local angle = (inst:GetAngleToPoint(xt, yt, zt) +90)* DEGREES
-
     local step = .75
     local ground = TheWorld.Map
     local targets, skiptoss = {}, {}
     local i = -1
     local noground = false
     local fx, delay, x1, z1
+
     while i < numsteps do
         i = i + 1
         dist = dist + step
         delay = math.max(0, i - 1)
         x1 = x + dist * math.sin(angle)
         z1 = z + dist * math.cos(angle)
-        local tile = ground:GetTileAtPoint(x1, 0, z1)
-
-        if tile == 255 or tile < 2 then
+        if not ground:IsPassableAtPoint(x1, 0, z1) then
             if i <= 0 then
                 return
             end
@@ -122,9 +119,6 @@ local function SpawnLaser(inst)
         fx.caster = inst
         fx.Transform:SetPosition(x1, 0, z1)
         fx:Trigger(delay * FRAMES, targets, skiptoss)
-        if i == 0 then
-        --    ShakeAllCameras(CAMERASHAKE.FULL, .7, .02, .6, fx, 30)
-        end
         if noground then
             break
         end

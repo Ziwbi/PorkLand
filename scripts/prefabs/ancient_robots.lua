@@ -64,7 +64,7 @@ local function OnAttacked(inst, data)
 end
 
 local function OnWorkCallback(inst, worker, work_left)
-    OnAttacked(inst, { attacker = worker})
+    OnAttacked(inst, {attacker = worker})
     inst.components.workable:SetWorkLeft(1)
     inst:PushEvent("attacked")
 end
@@ -176,8 +176,6 @@ local function commonfn()
     inst:AddComponent("mechassembly")
 
     inst:AddComponent("locomotor") -- locomotor must be constructed before the stategraph
-    --inst.components.locomotor.walkspeed = 2
-    --inst.components.locomotor.runspeed = 2
 
     inst:AddComponent("combat")
     inst.components.combat.hiteffectsymbol = "body01"
@@ -216,10 +214,6 @@ local function commonfn()
     inst:ListenForEvent("timerdone", OnTimerDone)
     inst:WatchWorldState("isaporkalypse", OnAporkalypse)
 
-    inst:ListenForEvent("actionfailed", function(_, data)
-        print(data.action, data.reason)
-    end)
-
     return inst
 end
 
@@ -233,7 +227,7 @@ local function ribs_fn()
     inst.AnimState:PlayAnimation("idle", true)
 
     inst.collisionradius = 2
-    inst.DynamicShadow:SetSize(6, inst.collisionradius) -- This is misleading?
+    inst.DynamicShadow:SetSize(6, inst.collisionradius)
 
     inst:AddTag("beam_attack")
     inst:AddTag("robot_ribs")
@@ -242,7 +236,7 @@ local function ribs_fn()
         return inst
     end
 
-    inst.components.locomotor.walkspeed = 2
+    inst.components.locomotor.walkspeed = 2 -- TODO tuning config
     inst.components.locomotor.runspeed = 2
 
     inst.components.mechassembly:SetUp({RIBS = 1})

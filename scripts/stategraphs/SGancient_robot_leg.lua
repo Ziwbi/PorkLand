@@ -54,9 +54,12 @@ AncientRobot.States.AddTaunt(states, {
     TimeEvent(15 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/metal_robot/leg/servo") end),
     TimeEvent(42 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/metal_robot/leg/taunt") end),
     TimeEvent(23 * FRAMES, function(inst)
-        local pos = inst:GetPosition()
-        TheWorld:PushEvent("ms_sendlightningstrike", pos) -- TODO fix lightning
-        ShakeAllCameras(CAMERASHAKE.FULL, 0.7, 0.02, .5, inst, SHAKE_DIST)
+        local x, y, z = inst.Transform:GetWorldPosition()
+        local fx = SpawnPrefab("lightning")
+        if fx then
+            fx.Transform:SetPosition(x, y, z)
+        end
+        ShakeAllCameras(CAMERASHAKE.FULL, 0.7, 0.02, 0.5, inst, SHAKE_DIST)
     end),
 })
 AncientRobot.States.AddLocomoteStates(states, {

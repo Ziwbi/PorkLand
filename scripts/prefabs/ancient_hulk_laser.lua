@@ -289,7 +289,7 @@ local function UpdateHit(inst, target)
             if target.components.colouradder ~= nil then
                 target.components.colouradder:PushColour(inst, c, 0, 0, 0)
             else
-                target.AnimState:SetAddColour(c, 0, 0, 0)
+                target.AnimState:SetAddColour(c, 0, 0, 1)
             end
             if inst.flash < .3 and oldflash >= .3 then
                 if target.components.bloomer ~= nil then
