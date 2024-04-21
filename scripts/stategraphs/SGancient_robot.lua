@@ -500,48 +500,38 @@ AncientRobot.States.AddLeap = function(states, pre_timeline, loop_timeline, pst_
         onenter = function(inst, data)
             inst.sg.statemem.startpos = data.startpos
             inst.sg.statemem.targetpos = data.targetpos
+            inst.sg.statemem.leap_time = 0
             inst.components.locomotor:Stop()
+            inst.Physics:SetActive(false)
             inst.components.locomotor:EnableGroundSpeedMultiplier(false)
-            inst.SoundEmitter:PlaySound("dontstarve_DLC001/creatures/bearger/swhoosh")
 
             inst.components.combat:StartAttack()
             inst.AnimState:PlayAnimation("atk_loop")
-
-            local range = 2
-            local theta = inst.Transform:GetRotation() * DEGREES
-            local offset = Vector3(range * math.cos(theta), 0, -range * math.sin(theta))
-            local newloc = Vector3(inst.sg.statemem.targetpos.x + offset.x, 0, inst.sg.statemem.targetpos.z + offset.z)
-
-            local time = inst.AnimState:GetCurrentAnimationLength()
-            local dist = math.sqrt(distsq(inst.sg.statemem.startpos.x, inst.sg.statemem.startpos.z, newloc.x, newloc.z))
-            local vel = dist/time
-
-            inst.sg.statemem.vel = vel
-
-            inst.components.locomotor:EnableGroundSpeedMultiplier(false)
-            inst.Physics:SetMotorVelOverride(vel, 0, 0)
-
-            inst.Physics:ClearCollisionMask()
-            inst.Physics:CollidesWith(COLLISION.WORLD)
+            inst.SoundEmitter:PlaySound("dontstarve_DLC001/creatures/bearger/swhoosh")
         end,
 
-        timeline = loop_timeline,
+        onupdate = function(inst, dt)
+            local percent = inst.sg.statemem.leap_time / inst.AnimState:GetCurrentAnimationLength()
+            inst.sg.statemem.leap_time = inst.sg.statemem.leap_time + dt
+            local xdiff = inst.sg.statemem.targetpos.x - inst.sg.statemem.startpos.x
+            local zdiff = inst.sg.statemem.targetpos.z - inst.sg.statemem.startpos.z
+
+            inst.Transform:SetPosition(inst.sg.statemem.startpos.x + xdiff * percent, 0, inst.sg.statemem.startpos.z + zdiff * percent)
+        end,
 
         onexit = function(inst)
-            inst.Physics:ClearMotorVelOverride()
-            MakeCharacterPhysics(inst, 99999, inst.collisionradius)
-
+            inst.Physics:SetActive(true)
             inst.components.locomotor:Stop()
             inst.components.locomotor:EnableGroundSpeedMultiplier(true)
             inst.sg.statemem.startpos = nil
             inst.sg.statemem.targetpos = nil
         end,
 
+        timeline = loop_timeline,
+
         events =
         {
-            EventHandler("animover", function(inst)
-                inst.sg:GoToState("leap_attack_pst")
-            end),
+            EventHandler("animover", function(inst) inst.sg:GoToState("leap_attack_pst") end),
         },
     })
 

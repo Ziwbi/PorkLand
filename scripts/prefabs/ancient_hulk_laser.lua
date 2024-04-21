@@ -59,6 +59,10 @@ local function OnWorked(inst, v)
     v:DoTaskInTime(0, function() SetFires(x, y, z, RADIUS) end)
 end
 
+local function validfn(inst, v)
+    return inst ~= v
+end
+
 local function LaserAOE(inst, targets, skiptoss)
     inst.task = nil
 
@@ -82,7 +86,7 @@ local function LaserAOE(inst, targets, skiptoss)
 
     SetFires(x, y, z, RADIUS)
 
-    DoCircularAOEDamageAndDestroy(inst, {damage_radius = RADIUS, should_launch = true, onattackedfn = OnAttacked, onworkedfn = OnWorked}, targets, skiptoss)
+    DoCircularAOEDamageAndDestroy(inst, {damage_radius = RADIUS, should_launch = true, onattackedfn = OnAttacked, onworkedfn = OnWorked, validfn = validfn}, targets, skiptoss)
 end
 
 local function Trigger(inst, delay, targets, skiptoss)

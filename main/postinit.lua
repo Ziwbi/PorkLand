@@ -80,6 +80,7 @@ end
 modimport("postinit/entityscript")
 modimport("postinit/animstate")
 modimport("postinit/input")
+modimport("postinit/stategraphs/commonstates")
 
 for _, file_name in ipairs(component_posts) do
     modimport("postinit/components/" .. file_name)

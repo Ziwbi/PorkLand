@@ -49,10 +49,11 @@ function DoCircularAOEDamageAndDestroy(inst, params, targets_hit, targets_tossed
     targets_tossed = targets_tossed or {}
     local pugalisk_parts = {}
 
-    local x, y, z = inst.Transform:GetWorldPosition()
-
+    local areahit_was_disabled = inst.components.combat.areahitdisabled
     inst.components.combat:EnableAreaDamage(false)
     inst.components.combat.ignorehitrange = true
+
+    local x, y, z = inst.Transform:GetWorldPosition()
     for _, v in ipairs(TheSim:FindEntities(x, 0, z, DAMAGE_RADIUS + 3, nil, DAMAGE_CANT_TAGS, DAMAGE_ONEOF_TAGS)) do
         if not targets_hit[v] and v:IsValid() and VALIDFN(inst, v) and not (v.components.health and v.components.health:IsDead()) then
             local actual_damage_range = DAMAGE_RADIUS + v:GetPhysicsRadius(0.5)
@@ -100,7 +101,7 @@ function DoCircularAOEDamageAndDestroy(inst, params, targets_hit, targets_tossed
         end
     end
 
-    inst.components.combat:EnableAreaDamage(true)
+    inst.components.combat.areahitdisabled = areahit_was_disabled
     inst.components.combat.ignorehitrange = false
 
     if not SHOULD_LAUNCH then

@@ -798,7 +798,7 @@ local states = {
 
     State{
         name = "ironlord_hit",
-        tags = {"hit", "busy"},
+        tags = {"hit"},
 
         onenter = function(inst)
             inst.components.locomotor:StopMoving()
