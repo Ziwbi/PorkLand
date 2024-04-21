@@ -742,6 +742,7 @@ local function pugalisk_redirectfn()
     inst:AddTag("NOCLICK")
     inst:AddTag("NOBLOCK")
     inst:AddTag("hostile")
+    inst:AddTag("pugalisk")
 
     inst._body = net_entity(inst.GUID, "_body", "bodydirty")
 

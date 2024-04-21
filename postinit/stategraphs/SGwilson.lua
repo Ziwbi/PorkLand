@@ -20,7 +20,7 @@ local function shoot(inst, is_full_charge)
         local beam = SpawnPrefab("ancient_hulk_orb")
         beam.AnimState:PlayAnimation("spin_loop", true)
         beam.Transform:SetPosition(newpt.x, newpt.y, newpt.z)
-        beam.host = player
+        beam.owner = player
 
         local targetpos = TheInput:GetWorldPosition()
         local controller_mode = TheInput:ControllerAttached()
@@ -39,7 +39,7 @@ local function shoot(inst, is_full_charge)
         beam.Transform:SetRotation(rotation)
         beam.AnimState:PlayAnimation("spin_loop",true)
         beam.components.combat.proxy = inst
-        beam.host = player
+        beam.owner = player
     end
 end
 

@@ -35,7 +35,6 @@ local function launchprojectile(inst, dir)
         local spawn_point = Vector3(x, y, z) + offset
 
         local projectile = SpawnPrefab("ancient_hulk_mine")
-        projectile.primed = false
         projectile.AnimState:PlayAnimation("spin_loop",true)
         projectile.Transform:SetPosition(x, 1, z)
 

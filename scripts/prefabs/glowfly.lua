@@ -103,6 +103,7 @@ local function commonfn()
     inst:AddTag("insect")
     inst:AddTag("smallcreature")
     inst:AddTag("wildfireprotected")
+    inst:AddTag("noember")
 
     MakeTinyFlyingCharacterPhysics(inst, 1, .5)
 

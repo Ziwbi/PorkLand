@@ -29,6 +29,9 @@ local function OnAttacked(inst, v)
                 v.components.temperature:DoDelta(math.min(10, maxtemp - curtemp))
             end
         end
+        if inst.owner then -- ancient_hulk_orb
+            v.components.combat:GetAttacked(inst.owner, 0) -- trigger event callback when necessary
+        end
     end
 end
 
@@ -351,7 +354,6 @@ end
 
 local function ShootProjectile(inst, targetpos)
     local projectile = SpawnPrefab("ancient_hulk_orb")
-    projectile.primed = false
     projectile.AnimState:PlayAnimation("spin_loop",true)
 
     local pt = inst.shotspawn:GetPosition()

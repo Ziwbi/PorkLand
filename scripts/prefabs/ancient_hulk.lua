@@ -173,6 +173,8 @@ local function fn()
     inst:AddTag("dontteleporttointerior")
     inst:AddTag("laser_immune")
     inst:AddTag("mech")
+    inst:AddTag("noember")
+    inst:AddTag("soulless")
 
     inst.entity:SetPristine()
 
@@ -248,32 +250,7 @@ local function fn()
     return inst
 end
 
-local function OnHit(inst, dist)
-    inst.AnimState:PlayAnimation("land")
-    inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/ribs/step_wires")
-    inst.AnimState:PushAnimation("open")
-    inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/rust")
-    inst:ListenForEvent("animover", function()
-        if inst.AnimState:IsCurrentAnimation("open") then
-            inst.primed = true
-            inst.AnimState:PlayAnimation("green_loop", true)
-        end
-    end)
-end
-
 local function OnNearMine(inst, ents)
-    local detonate = false
-    for _, ent in ipairs(ents) do
-        if not ent:HasTag("ancient_hulk") then
-            detonate = true
-            break
-        end
-    end
-
-    if not inst.primed or not detonate then
-        return
-    end
-
     SetLightValueWithFade(inst, 0, 0.75, 0.2 )
     inst.AnimState:PlayAnimation("red_loop", true)
     inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/active_LP", "boom_loop")
@@ -294,7 +271,25 @@ local function OnNearMine(inst, ents)
 end
 
 local function MineTestFn(inst)
-    return not (inst:HasTag("anicent_hulk") or inst:HasTag("flying"))
+    return not (inst:HasTag("anicent_hulk") or inst:HasTag("flying") or inst:HasTag("shadow"))
+end
+
+local function OnHit(inst, dist)
+    inst.AnimState:PlayAnimation("land")
+    inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/ribs/step_wires")
+    inst.AnimState:PushAnimation("open")
+    inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/rust")
+    inst:ListenForEvent("animover", function()
+        if inst.AnimState:IsCurrentAnimation("open") then
+            inst.AnimState:PlayAnimation("green_loop", true)
+
+            inst:AddComponent("creatureprox")
+            inst.components.creatureprox.period = 0.01
+            inst.components.creatureprox:SetDist(3.5, 5)
+            inst.components.creatureprox:SetOnNear(OnNearMine)
+            inst.components.creatureprox:SetFindTestFn(MineTestFn)
+        end
+    end)
 end
 
 local function mine_fn()
@@ -336,14 +331,6 @@ local function mine_fn()
 
     inst:AddComponent("combat")
     inst.components.combat:SetDefaultDamage(TUNING.ANCIENT_HULK_MINE_DAMAGE)
-
-    inst:AddComponent("creatureprox")
-    inst.components.creatureprox.period = 0.01
-    inst.components.creatureprox:SetDist(3.5, 5)
-    inst.components.creatureprox:SetOnNear(OnNearMine)
-    inst.components.creatureprox:SetFindTestFn(MineTestFn)
-
-    inst.primed = true
 
     MakeHauntable(inst)
 

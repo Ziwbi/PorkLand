@@ -200,7 +200,7 @@ local PL_COMPONENT_ACTIONS =
 {
     SCENE = { -- args: inst, doer, actions, right
         livingartifact = function (inst, doer, actions, right)
-            if not inst:HasTag("enabled") then
+            if not inst:HasTag("enabled") and right then
                 table.insert(actions, ACTIONS.USE_LIVING_ARTIFACT)
             end
         end

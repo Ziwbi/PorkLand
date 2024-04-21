@@ -59,6 +59,7 @@ local brain_posts = {
 local widget_posts = {
     "bloodover",
     "seasonclock",
+    "statusdisplays",
     "uiclock"
 }
 
