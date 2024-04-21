@@ -271,7 +271,7 @@ local function OnNearMine(inst, ents)
 end
 
 local function MineTestFn(inst)
-    return not (inst:HasTag("anicent_hulk") or inst:HasTag("flying") or inst:HasTag("shadow"))
+    return not (inst:HasTag("ancient_hulk") or inst:HasTag("flying") or inst:HasTag("shadow"))
 end
 
 local function OnHit(inst, dist)
@@ -290,6 +290,20 @@ local function OnHit(inst, dist)
             inst.components.creatureprox:SetFindTestFn(MineTestFn)
         end
     end)
+end
+
+local function MineOnSave(inst)
+    return inst.components.creatureprox and {primed = true}
+end
+
+local function MineOnLoad(inst, data)
+    if data and data.primed then
+        inst:AddComponent("creatureprox")
+        inst.components.creatureprox.period = 0.01
+        inst.components.creatureprox:SetDist(3.5, 5)
+        inst.components.creatureprox:SetOnNear(OnNearMine)
+        inst.components.creatureprox:SetFindTestFn(MineTestFn)
+    end
 end
 
 local function mine_fn()
@@ -331,6 +345,9 @@ local function mine_fn()
 
     inst:AddComponent("combat")
     inst.components.combat:SetDefaultDamage(TUNING.ANCIENT_HULK_MINE_DAMAGE)
+
+    inst.OnSave = MineOnSave
+    inst.OnLoad = MineOnLoad
 
     MakeHauntable(inst)
 

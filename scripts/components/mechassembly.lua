@@ -66,7 +66,7 @@ function MechAssembly:Dissemble()
 
         part:DoTaskInTime(math.random() * 0.6,function()
             part:PushEvent("shock")
-            part.components.timer:SetTimeLeft("discharge", 20 * (math.random() + 1)) -- TODO fix timer
+            part.components.timer:SetTimeLeft("discharge", 20 * (math.random() + 1))
             if not TheWorld.state.isaporkalypse then
                 part.components.timer:ResumeTimer("discharge")
             end

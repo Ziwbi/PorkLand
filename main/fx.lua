@@ -70,7 +70,11 @@ local pl_fx = {
         name = "sparks_green_fx",
         bank = "sparks",
         build = "sparks_green",
-        anim = "sparks_1", --TODO "sparks_2", "sparks_3"},
+        anim = "sparks_1",
+        fn = function(inst)
+            local anims = {"sparks_1", "sparks_2", "sparks_3"}
+            inst.AnimState:PlayAnimation(anims[math.random(1, 3)])
+        end
     },
     {
         name = "metal_hulk_ring_fx",
@@ -103,6 +107,7 @@ local pl_fx = {
         anim = "idle",
         fn = function(inst)
             inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
+            inst.AnimState:SetLayer(LAYER_BACKGROUND)
             inst.Transform:SetRotation(math.random() * 360)
             inst.Transform:SetScale(0.85, 0.85, 0.85)
 

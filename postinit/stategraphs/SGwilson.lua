@@ -596,8 +596,8 @@ local states = {
             TimeEvent(6  * FRAMES, function(inst) inst:PerformBufferedAction() end),
             TimeEvent(14 * FRAMES, function(inst) inst.sg:RemoveStateTag("working") inst.sg:RemoveStateTag("busy") inst.sg:AddStateTag("idle") end),
             TimeEvent(15 * FRAMES, function(inst)
-                if (TheInput:IsMouseDown(MOUSEBUTTON_LEFT) or -- TODO
-                   TheInput:IsKeyDown(KEY_SPACE)) and
+                if (TheInput:IsControlPressed(CONTROL_PRIMARY) or
+                   TheInput:IsControlPressed(CONTROL_ACTION)) and
                     inst.sg.statemem.action and
                     inst.sg.statemem.action:IsValid() and
                     inst.sg.statemem.action.target and
