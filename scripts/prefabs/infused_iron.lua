@@ -3,17 +3,6 @@ local assets =
     Asset("ANIM", "anim/infused_iron.zip"),
 }
 
-local function OnSave(inst, data)
-    data.anim = inst.animname
-end
-
-local function OnLoad(inst, data)
-    if data and data.anim then
-        inst.animname = data.anim
-        inst.AnimState:PlayAnimation(inst.animname)
-    end
-end
-
 local function fn()
     local inst = CreateEntity()
 
@@ -59,9 +48,6 @@ local function fn()
 
     MakeHauntableLaunchAndPerish(inst)
     MakeBlowInHurricane(inst, TUNING.WINDBLOWN_SCALE_MIN.HEAVY, TUNING.WINDBLOWN_SCALE_MAX.HEAVY)
-
-    inst.OnSave = OnSave
-    inst.OnLoad = OnLoad
 
     return inst
 end

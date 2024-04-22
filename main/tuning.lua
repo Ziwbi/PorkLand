@@ -224,7 +224,13 @@ local tuning = {
     ROBOT_TARGET_DIST = 15,
     ROBOT_RIBS_DAMAGE = wilson_attack,
     ROBOT_RIBS_HEALTH = 1000,
-    ROBOT_LEG_DAMAGE = wilson_attack*2,
+    ROBOT_LEG_DAMAGE = wilson_attack * 2,
+    ROBOT_LOCOMOTE_SPEED = {
+        RIBS = 2,
+        CLAW = 3,
+        LEG = 4,
+        HEAD = 4,
+    },
     ROBOT_DISCHARGE_TIME = 90,
 
     LASER_DAMAGE = 20,
@@ -234,11 +240,14 @@ local tuning = {
     ANCIENT_HULK_MINE_DAMAGE = 100,
     ANCIENT_HULK_MELEE_RANGE = 5.5,
     ANCIENT_HULK_ATTACK_RANGE = 5.5,
+    ANCIENT_HULK_BARRIER_CD = 10,
+    ANCIENT_HULK_SPIN_CD = 10,
+    ANCIENT_HULK_TELEPORT_CD = 5,
 
-    IRON_LORD_DAMAGE = wilson_attack*2,
-    IRON_LORD_TIME = 3*60,
+    IRON_LORD_DAMAGE = wilson_attack * 2,
+    IRON_LORD_TIME = 3 * 60,
 
-    INFUSED_IRON_PERISHTIME = total_day_time*2,
+    INFUSED_IRON_PERISHTIME = total_day_time * 2,
 }
 
 for key, value in pairs(tuning) do

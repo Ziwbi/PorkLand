@@ -59,7 +59,7 @@ local function OnAttacked(inst, data)
     inst.components.combat:SetTarget(data.attacker)
 
     local fx = SpawnPrefab("sparks_green_fx")
-    local x, y, z= inst.Transform:GetWorldPosition()
+    local x, y, z = inst.Transform:GetWorldPosition()
     fx.Transform:SetPosition(x, y + 1, z)
 end
 
@@ -236,8 +236,8 @@ local function ribs_fn()
         return inst
     end
 
-    inst.components.locomotor.walkspeed = 2 -- TODO tuning config
-    inst.components.locomotor.runspeed = 2
+    inst.components.locomotor.walkspeed = TUNING.ROBOT_LOCOMOTE_SPEED.RIBS
+    inst.components.locomotor.runspeed = TUNING.ROBOT_LOCOMOTE_SPEED.RIBS
 
     inst.components.mechassembly:SetUp({RIBS = 1})
 
@@ -267,8 +267,8 @@ local function claw_fn()
         return inst
     end
 
-    inst.components.locomotor.walkspeed = 3
-    inst.components.locomotor.runspeed = 3
+    inst.components.locomotor.walkspeed = TUNING.ROBOT_LOCOMOTE_SPEED.CLAW
+    inst.components.locomotor.runspeed = TUNING.ROBOT_LOCOMOTE_SPEED.CLAW
 
     inst.components.mechassembly:SetUp({CLAW = 1})
 
@@ -303,8 +303,8 @@ local function leg_fn()
         return inst
     end
 
-    inst.components.locomotor.walkspeed = 4
-    inst.components.locomotor.runspeed = 4
+    inst.components.locomotor.walkspeed = TUNING.ROBOT_LOCOMOTE_SPEED.LEG
+    inst.components.locomotor.runspeed = TUNING.ROBOT_LOCOMOTE_SPEED.LEG
 
     inst.components.mechassembly:SetUp({LEG = 1})
 
@@ -340,8 +340,8 @@ local function head_fn()
         return inst
     end
 
-    inst.components.locomotor.walkspeed = 4
-    inst.components.locomotor.runspeed = 4
+    inst.components.locomotor.walkspeed = TUNING.ROBOT_LOCOMOTE_SPEED.HEAD
+    inst.components.locomotor.runspeed = TUNING.ROBOT_LOCOMOTE_SPEED.HEAD
 
     inst.components.combat:SetDefaultDamage(TUNING.ROBOT_LEG_DAMAGE)
 

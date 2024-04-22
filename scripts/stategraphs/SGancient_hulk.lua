@@ -8,43 +8,43 @@ local ShootProjectile = AncientHulkUtil.ShootProjectile
 local DoSectorAOE = AncientHulkUtil.DoSectorAOE
 
 local SHAKE_DIST = 40
-local BEAMRAD = 7
+local BEAM_RADIUS = 7
 
-local function teleport(inst)
-    local pt = inst.components.combat.target and inst.components.combat.target:GetPosition() or inst:GetPosition()
+local function Teleport(inst)
+    local target = inst.components.combat.target or inst
+    local target_position = target:GetPosition()
 
     local theta = math.random() * 2 * PI
 
-    local offset
+    local offset, radius
     while not offset do
-        offset = FindWalkableOffset(pt, theta, 12 + math.random() * 5, 12, true)
+        radius = 12 + math.random() * 5
+        offset = FindWalkableOffset(target_position, theta, radius, 12, true)
     end
 
     inst.Physics:SetActive(true)
-    inst.Transform:SetPosition(pt.x + offset.x, 0, pt.z + offset.z)
+    inst.Transform:SetPosition(target_position.x + offset.x, 0, target_position.z + offset.z)
     inst.sg:GoToState("telportin")
 end
 
-local function launchprojectile(inst, dir)
+local function LaunchProjectile(inst, direction)
     local x, y, z = inst.Transform:GetWorldPosition()
-    local theta = dir - (PI/6) + (PI/3*math.random())
+    local theta = direction - PI / 6 + math.random() * PI / 3
+    local radius = 6 + math.random() * 6
 
-    local offset = FindWalkableOffset(Vector3(x, y, z), theta, 6 + math.random() * 6, 12, true)
+    local offset = FindWalkableOffset(Vector3(x, y, z), theta, radius, 12, true)
 
     if offset then
         local spawn_point = Vector3(x, y, z) + offset
+        local dx = spawn_point.x - x
+        local dz = spawn_point.z - z
+        local rangesq = dx * dx + dz * dz
+        local max_range = TUNING.FIRE_DETECTOR_RANGE
+        local speed = easing.linear(rangesq, 15, 3, max_range * max_range)
 
         local projectile = SpawnPrefab("ancient_hulk_mine")
         projectile.AnimState:PlayAnimation("spin_loop",true)
         projectile.Transform:SetPosition(x, 1, z)
-
-        --V2C: scale the launch speed based on distance
-        --     because 15 does not reach our max range.
-        local dx = spawn_point.x - x
-        local dz = spawn_point.z - z
-        local rangesq = dx * dx + dz * dz
-        local maxrange = TUNING.FIRE_DETECTOR_RANGE
-        local speed = easing.linear(rangesq, 15, 3, maxrange * maxrange)
         projectile.components.complexprojectile:SetHorizontalSpeed(speed)
         projectile.components.complexprojectile:SetGravity(-25)
         projectile.components.complexprojectile:Launch(spawn_point, inst, inst)
@@ -52,21 +52,21 @@ local function launchprojectile(inst, dir)
     end
 end
 
-local function spawnburns(inst,rad,startangle,endangle,num)
-    startangle = startangle *DEGREES
-    endangle = endangle *DEGREES
+local function SpawnBurns(inst, radius, start_angle, end_angle)
+    start_angle = start_angle * DEGREES
+    end_angle = end_angle * DEGREES
+
+    local num_burns = 5
     local pt = Vector3(inst.Transform:GetWorldPosition())
     local down = TheCamera:GetDownVec()
-    local angle = math.atan2(down.z, down.x) + startangle
-    local angdiff = (endangle-startangle)/num
-    for i=1,num do
-        local offset = Vector3(rad * math.cos( angle ), 0, rad * math.sin( angle ))
-        local newpt = pt + offset
-        local fx = SpawnPrefab("ancient_hulk_laser")
-        fx.Transform:SetPosition(newpt.x,newpt.y,newpt.z)
-        local burn =  SpawnPrefab("ancient_hulk_laserscorch")
-        burn.Transform:SetPosition(newpt.x,newpt.y,newpt.z)
-        angle = angle + angdiff
+    local angle = math.atan2(down.z, down.x) + start_angle
+    local angle_difference = (end_angle - start_angle) / num_burns
+    for _ = 1, num_burns do
+        local offset = Vector3(math.cos(angle), 0, math.sin(angle)) * radius
+        local burns_position = pt + offset
+        SpawnPrefab("ancient_hulk_laser").Transform:SetPosition(burns_position.x, burns_position.y, burns_position.z)
+        SpawnPrefab("ancient_hulk_laserscorch").Transform:SetPosition(burns_position.x, burns_position.y, burns_position.z)
+        angle = angle + angle_difference
     end
 end
 
@@ -256,14 +256,13 @@ local states =
                 ShakeAllCameras(CAMERASHAKE.FULL, 0.7, 0.02, 2, inst, SHAKE_DIST)
 
                 local x,y,z = inst.Transform:GetWorldPosition()
-                -- TODO Originally there were only 7 laserscorch, I think this is wrong
                 for i = -1, 1 do
                     for j = -1, 1 do
                         SpawnPrefab("ancient_hulk_laserscorch").Transform:SetPosition(x + i, 0, z + j)
                     end
                 end
 
-                TheWorld:DoTaskInTime(2, function()
+                inst:DoTaskInTime(2, function()
                     local head = SpawnPrefab("ancient_robot_head")
                     head.spawntask:Cancel()
                     head.spawntask = nil
@@ -320,7 +319,7 @@ local states =
         {
             EventHandler("animover", function(inst)
                 inst:Hide()
-                inst:DoTaskInTime(0.5, teleport)
+                inst:DoTaskInTime(0.5, Teleport)
             end ),
         },
 
@@ -363,7 +362,7 @@ local states =
         {
             EventHandler("animover", function(inst)
                 inst.sg:GoToState("idle")
-                inst.components.timer:StartTimer("teleport_cd", 5)
+                inst.components.timer:StartTimer("teleport_cd", TUNING.ANCIENT_HULK_TELEPORT_CD)
             end ),
         },
 
@@ -438,10 +437,10 @@ local states =
             TimeEvent(12 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/mine_shot") end),
             TimeEvent(18 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/boss/hulk_metal_robot/mine_shot") end),
 
-            TimeEvent(1  * FRAMES, function(inst) launchprojectile(inst, 0) end),
-            TimeEvent(6  * FRAMES, function(inst) launchprojectile(inst, PI * 0.5) end),
-            TimeEvent(11 * FRAMES, function(inst) launchprojectile(inst, PI) end),
-            TimeEvent(16 * FRAMES, function(inst) launchprojectile(inst, PI * 1.5) end),
+            TimeEvent(1  * FRAMES, function(inst) LaunchProjectile(inst, 0) end),
+            TimeEvent(6  * FRAMES, function(inst) LaunchProjectile(inst, PI * 0.5) end),
+            TimeEvent(11 * FRAMES, function(inst) LaunchProjectile(inst, PI) end),
+            TimeEvent(16 * FRAMES, function(inst) LaunchProjectile(inst, PI * 1.5) end),
         },
 
         events =
@@ -502,7 +501,7 @@ local states =
             TimeEvent(30 * FRAMES, function(inst)
                 local lob_position
                 if inst.components.combat.target and inst.components.combat.target:IsValid() then
-                    lob_position = Vector3(inst.components.combat.target.Transform:GetWorldPosition())
+                    lob_position = inst.components.combat.target:GetPosition()
                 else
                     local radius = 15
                     local angle = inst.Transform:GetRotation() * DEGREES
@@ -572,55 +571,51 @@ local states =
             TimeEvent(51 * FRAMES, function(inst) TheMixer:PopMix("boom") end),
 
             TimeEvent(37 * FRAMES, function(inst)
-                DoSectorAOE(inst,BEAMRAD,0,45)
+                DoSectorAOE(inst, BEAM_RADIUS, 0, 45)
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 0})
-                spawnburns(inst,BEAMRAD,0,45,5)
+                SpawnBurns(inst, BEAM_RADIUS, 0, 45)
             end),
             TimeEvent(39 * FRAMES, function(inst)
-                DoSectorAOE(inst,BEAMRAD,45,90)
-                spawnburns(inst,BEAMRAD,45,90,5)
+                DoSectorAOE(inst, BEAM_RADIUS, 45, 90)
+                SpawnBurns(inst, BEAM_RADIUS, 45, 90)
             end),
             TimeEvent(40 * FRAMES, function(inst)
-                DoSectorAOE(inst,BEAMRAD,90,135)
+                DoSectorAOE(inst, BEAM_RADIUS, 90, 135)
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 0.3})
-                spawnburns(inst,BEAMRAD,90,135,5)
+                SpawnBurns(inst, BEAM_RADIUS, 90, 135)
             end),
             TimeEvent(41 * FRAMES, function(inst)
-                DoSectorAOE(inst,BEAMRAD,135,180)
-
-                spawnburns(inst,BEAMRAD,135,180,5)
+                DoSectorAOE(inst, BEAM_RADIUS, 135, 180)
+                SpawnBurns(inst, BEAM_RADIUS, 135, 180)
             end),
             TimeEvent(42 * FRAMES, function(inst)
-                DoSectorAOE(inst,BEAMRAD,180,225)
-
+                DoSectorAOE(inst, BEAM_RADIUS, 180, 225)
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 0.5})
-                spawnburns(inst,BEAMRAD,180,225,5)
+                SpawnBurns(inst, BEAM_RADIUS, 180, 225)
             end),
             TimeEvent(45 * FRAMES, function(inst)
-                DoSectorAOE(inst,BEAMRAD,225,270)
-
-                spawnburns(inst,BEAMRAD,225,270,5)
+                DoSectorAOE(inst, BEAM_RADIUS, 225, 270)
+                SpawnBurns(inst, BEAM_RADIUS, 225, 270)
             end),
             TimeEvent(47 * FRAMES, function(inst)
-                DoSectorAOE(inst,BEAMRAD,270,315)
+                DoSectorAOE(inst, BEAM_RADIUS, 270, 315)
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 0.7})
-                spawnburns(inst,BEAMRAD,270,315,5)
+                SpawnBurns(inst, BEAM_RADIUS, 270, 315)
             end),
             TimeEvent(48 * FRAMES, function(inst)
-                DoSectorAOE(inst,BEAMRAD,315,360)
-                spawnburns(inst,BEAMRAD,315,360,5)
+                DoSectorAOE(inst, BEAM_RADIUS, 315, 360)
+                SpawnBurns(inst, BEAM_RADIUS, 315, 360)
             end),
             TimeEvent(50 * FRAMES, function(inst)
-                DoSectorAOE(inst,BEAMRAD,0,45)
-
+                DoSectorAOE(inst, BEAM_RADIUS, 0, 45)
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser", {intensity = 1})
-                spawnburns(inst,BEAMRAD,0,45,5)
+                SpawnBurns(inst, BEAM_RADIUS, 0, 45)
             end),
         },
 
         onexit = function(inst)
             inst.Transform:SetSixFaced()
-            inst.components.timer:StartTimer("spin_cd", 10)
+            inst.components.timer:StartTimer("spin_cd", TUNING.ANCIENT_HULK_SPIN_CD)
             inst.components.combat.playerdamagepercent = 0.5
         end,
 
@@ -668,7 +663,7 @@ local states =
 
         onexit = function(inst)
             inst.Transform:SetSixFaced()
-            inst.components.timer:StartTimer("barrier_cd", 10)
+            inst.components.timer:StartTimer("barrier_cd", TUNING.ANCIENT_HULK_BARRIER_CD)
             inst.components.groundpounder.damageRings = 2
             inst.components.groundpounder.destructionRings = 3
             inst.components.groundpounder.numRings = 3

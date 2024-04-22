@@ -634,21 +634,16 @@ local states = {
 
             inst.sg.statemem.ready_to_shoot = false
             inst.sg.statemem.should_shoot = false
-
-            inst.sg.statemem.control_handler = TheInput:AddControlHandler(CONTROL_SECONDARY, function(down)
-                if not down then
-                    inst.sg.statemem.should_shoot = true
-                    inst.sg.statemem.control_handler:Remove()
-                end
-            end)
         end,
 
         onexit = function(inst)
             inst:ClearBufferedAction()
-            inst.sg.statemem.control_handler:Remove()
         end,
 
         onupdate = function(inst)
+            if not inst.components.playercontroller:IsControlPressed(CONTROL_SECONDARY) then
+                inst.sg.statemem.should_shoot = true
+            end
             if inst.sg.statemem.should_shoot and inst.sg.statemem.ready_to_shoot then
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/common/crafted/iron_lord/smallshot", {timeoffset = math.random()})
                 inst.SoundEmitter:KillSound("chargedup")
@@ -684,22 +679,17 @@ local states = {
 
             inst.sg.statemem.ready_to_shoot = false
             inst.sg.statemem.should_shoot = false
-
-            inst.sg.statemem.control_handler = TheInput:AddControlHandler(CONTROL_SECONDARY, function(down)
-                if not down then
-                    inst.sg.statemem.should_shoot = true
-                    inst.sg.statemem.control_handler:Remove()
-                end
-            end)
         end,
 
         onexit = function(inst)
             inst:ClearBufferedAction()
             inst.SoundEmitter:KillSound("chargedup")
-            inst.sg.statemem.control_handler:Remove()
         end,
 
         onupdate = function(inst)
+            if not inst.components.playercontroller:IsControlPressed(CONTROL_SECONDARY) then
+                inst.sg.statemem.should_shoot = true
+            end
             if inst.sg.statemem.should_shoot and inst.sg.statemem.ready_to_shoot then
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser",  {intensity = math.random(0.7, 1)})
 

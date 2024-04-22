@@ -1,6 +1,6 @@
 return {
     ACTIONS = {
-        CHARGE = "Charge",
+        CHARGE_UP = "Charge",
         HACK = "Hack",
         PAN = "Pan",
         PICK = {

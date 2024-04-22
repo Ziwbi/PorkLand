@@ -736,6 +736,7 @@ local function pugalisk_redirectfn()
     local inst = CreateEntity()
 
     inst.entity:AddTransform()
+    inst.entity:AddAnimState() -- adding AnimState just so it won't crash with ancient_hulk_laser (and brightshade staff)
     inst.entity:AddSoundEmitter()
     inst.entity:AddNetwork()
 

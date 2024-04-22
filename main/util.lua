@@ -36,8 +36,8 @@ end
 ---@param targets_hit table|nil track entities hit with this table, not required
 ---@param targets_tossed table|nil track items tossed with this table, not required
 function DoCircularAOEDamageAndDestroy(inst, params, targets_hit, targets_tossed)
-    local DAMAGE_RADIUS = params.damage_radius
-    local LAUNCH_RADIUS = params.launch_range or DAMAGE_RADIUS
+    local damage_radius = params.damage_radius
+    local launch_radius = params.launch_range or damage_radius
     local LAUNCH_SPEED = params.launch_speed or 0.2
     local SHOULD_LAUNCH = params.should_launch or false
     local ONATTACKEDFN = params.onattackedfn or function(...) end
@@ -54,9 +54,9 @@ function DoCircularAOEDamageAndDestroy(inst, params, targets_hit, targets_tossed
     inst.components.combat.ignorehitrange = true
 
     local x, y, z = inst.Transform:GetWorldPosition()
-    for _, v in ipairs(TheSim:FindEntities(x, 0, z, DAMAGE_RADIUS + 3, nil, DAMAGE_CANT_TAGS, DAMAGE_ONEOF_TAGS)) do
+    for _, v in ipairs(TheSim:FindEntities(x, 0, z, damage_radius + 3, nil, DAMAGE_CANT_TAGS, DAMAGE_ONEOF_TAGS)) do
         if not targets_hit[v] and v:IsValid() and VALIDFN(inst, v) and not (v.components.health and v.components.health:IsDead()) then
-            local actual_damage_range = DAMAGE_RADIUS + v:GetPhysicsRadius(0.5)
+            local actual_damage_range = damage_radius + v:GetPhysicsRadius(0.5)
             if v:GetDistanceSqToPoint(x, 0, z) < actual_damage_range * actual_damage_range then
                 if is_valid_work_target(v) then
                     targets_hit[v] = true
@@ -108,9 +108,9 @@ function DoCircularAOEDamageAndDestroy(inst, params, targets_hit, targets_tossed
         return
     end
 
-    for _, v in ipairs(TheSim:FindEntities(x, 0, z, LAUNCH_RADIUS + 3, LAUNCH_MUST_TAGS, LAUNCH_CANT_TAGS)) do
+    for _, v in ipairs(TheSim:FindEntities(x, 0, z, launch_radius + 3, LAUNCH_MUST_TAGS, LAUNCH_CANT_TAGS)) do
         if not targets_tossed[v] then
-            local actual_launch_range = LAUNCH_RADIUS + v:GetPhysicsRadius(.5)
+            local actual_launch_range = launch_radius + v:GetPhysicsRadius(.5)
             if v:GetDistanceSqToPoint(x, 0, z) < actual_launch_range * actual_launch_range then
                 if v.components.mine then
                     targets_hit[v] = true

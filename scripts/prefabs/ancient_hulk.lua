@@ -292,8 +292,10 @@ local function OnHit(inst, dist)
     end)
 end
 
-local function MineOnSave(inst)
-    return inst.components.creatureprox and {primed = true}
+local function MineOnSave(inst, data)
+    if inst.components.creatureprox then
+        data.primed = true
+    end
 end
 
 local function MineOnLoad(inst, data)

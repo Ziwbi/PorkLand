@@ -18,24 +18,17 @@ SetSharedLootTable("rock_basalt",
     {"flint",  0.30},
 })
 
-local function OnWork(inst, worker, workleft)
-    if workleft <= 0 then
+local function OnWork(inst, worker, work_left)
+    if work_left <= 0 then
         local pt = inst:GetPosition()
         SpawnPrefab("rock_break_fx").Transform:SetPosition(pt.x, pt.y, pt.z)
         inst.components.lootdropper:DropLoot(pt)
-
-        if inst.showCloudFXwhenRemoved then
-            local fx = SpawnPrefab("collapse_small")
-            fx.Transform:SetPosition(pt.x, pt.y, pt.z)
-        end
-
         inst:Remove()
     else
         inst.AnimState:PlayAnimation(
-            (workleft < TUNING.ROCKS_MINE / 3 and "low") or
-            (workleft < TUNING.ROCKS_MINE * 2 / 3 and "med") or
-            "full"
-        )
+            (work_left < TUNING.ROCKS_MINE / 3 and "low") or
+            (work_left < TUNING.ROCKS_MINE * 2 / 3 and "med") or
+            "full")
     end
 end
 
@@ -45,7 +38,7 @@ local function basalt_fn()
     inst.entity:AddTransform()
     inst.entity:AddAnimState()
     inst.entity:AddSoundEmitter()
-    inst.entity:AddMiniMapEntity() -- TODO
+    inst.entity:AddMiniMapEntity()
     inst.entity:AddNetwork()
 
     MakeObstaclePhysics(inst, 1)
