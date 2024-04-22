@@ -29,24 +29,29 @@ local function OnAttacked(inst, v)
                 v.components.temperature:DoDelta(math.min(10, maxtemp - curtemp))
             end
         end
-        if inst.owner then -- ancient_hulk_orb
-            v.components.combat:GetAttacked(inst.owner, 0) -- trigger event callback when necessary
+        if inst.owner and inst.owner:IsValid() then -- ancient_hulk_orb
+            v.components.combat:SuggestTarget(inst.owner)
         end
     end
 end
 
-local function OnWorked(inst, v)
-    local x, y, z = inst.Transform:GetWorldPosition()
-    v:DoTaskInTime(0.3, function() SetFires(x, y, z, 1) end)
-end
-
 local function DoCircularAOE(inst, radius)
+    local function OnWorked(inst, v)
+        local x, y, z = inst.Transform:GetWorldPosition()
+        v:DoTaskInTime(0.3, function() SetFires(x, y, z, radius) end)
+    end
+
     local x, y, z = inst.Transform:GetWorldPosition()
     SetFires(x, y, z, radius)
     DoCircularAOEDamageAndDestroy(inst, {damage_radius = radius, onattackedfn = OnAttacked, onworkedfn = OnWorked, validfn = is_valid_target})
 end
 
 local function DoSectorAOE(inst, radius, start_angle, end_angle)
+    local function OnWorked(inst, v)
+        local x, y, z = inst.Transform:GetWorldPosition()
+        v:DoTaskInTime(0.3, function() SetFires(x, y, z, radius) end)
+    end
+
     local x, y, z = inst.Transform:GetWorldPosition()
     SetFires(x, y, z, radius)
     DoSectorAOEDamageAndDestroy(inst, {damage_radius = radius, start_angle = start_angle, end_angle = end_angle, onattackedfn = OnAttacked, onworkedfn = OnWorked, validfn = is_valid_target})
@@ -181,8 +186,7 @@ local function SpawnBarrier(inst, pt)
         local spawn_point = pt + offset
 
         if TheWorld.Map:IsVisualGroundAtPoint(spawn_point.x, 0, spawn_point.z) then
-            -- Use scheduler:ExecuteInTime here in case iron hulk dies before all barriers spawn
-            scheduler:ExecuteInTime(math.random() * 0.3, function()
+            inst:DoTaskInTime(math.random() * 0.3, function()
                 local rock = SpawnPrefab("rock_basalt")
                 rock.AnimState:PlayAnimation("emerge")
                 rock.AnimState:PushAnimation("full")

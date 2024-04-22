@@ -585,7 +585,7 @@ local states = {
         tags = {"busy", "working"},
 
         onenter = function(inst)
-            inst.Physics:Stop()
+            inst.components.locomotor:Stop()
             inst.AnimState:PlayAnimation("power_punch")
             inst.sg.statemem.action = inst:GetBufferedAction()
         end,
@@ -596,8 +596,8 @@ local states = {
             TimeEvent(6  * FRAMES, function(inst) inst:PerformBufferedAction() end),
             TimeEvent(14 * FRAMES, function(inst) inst.sg:RemoveStateTag("working") inst.sg:RemoveStateTag("busy") inst.sg:AddStateTag("idle") end),
             TimeEvent(15 * FRAMES, function(inst)
-                if (TheInput:IsControlPressed(CONTROL_PRIMARY) or
-                   TheInput:IsControlPressed(CONTROL_ACTION)) and
+                if inst.components.playercontroller and
+                    inst.components.playercontroller:IsAnyOfControlsPressed(CONTROL_PRIMARY, CONTROL_ACTION, CONTROL_CONTROLLER_ACTION) and
                     inst.sg.statemem.action and
                     inst.sg.statemem.action:IsValid() and
                     inst.sg.statemem.action.target and
@@ -608,15 +608,6 @@ local states = {
                 end
             end),
         },
-
-        -- events =
-        -- {
-        --     EventHandler("animover", function(inst)
-        --         if inst.AnimState:AnimDone() then
-        --             inst.sg:GoToState("ironlord_idle")
-        --         end
-        --     end),
-        -- },
     },
 
     State{

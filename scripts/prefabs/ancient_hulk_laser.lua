@@ -24,7 +24,7 @@ local prefabs =
     "ancient_hulk_laserhit",
 }
 
-local RADIUS = .7
+local RADIUS = 1.7
 
 local function SetLightRadius(inst, radius)
     inst.Light:SetRadius(radius)
@@ -60,7 +60,7 @@ local function OnWorked(inst, v)
 end
 
 local function validfn(inst, v)
-    return inst ~= v
+    return not v:HasTag("ancient_robot")
 end
 
 local function LaserAOE(inst, targets, skiptoss)
@@ -139,7 +139,7 @@ local function common_fn(isempty)
     end
 
     inst:AddComponent("combat")
-    inst.components.combat:SetDefaultDamage(TUNING.ancient_hulk_DAMAGE)
+    inst.components.combat:SetDefaultDamage(TUNING.LASER_DAMAGE)
     inst.components.combat:SetKeepTargetFunction(KeepTargetFn)
 
     inst.task = inst:DoTaskInTime(0, inst.Remove)
