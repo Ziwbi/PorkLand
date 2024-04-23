@@ -51,6 +51,9 @@ function LivingArtifact:Activate(doer, instant)
     if self.onactivatefn then
         self.onactivatefn(self.inst, doer, instant)
     end
+    if instant then
+        return
+    end
     self.inst:StartUpdatingComponent(self)
 end
 
@@ -67,10 +70,7 @@ end
 
 function LivingArtifact:OnLoad(data)
     if data and data.active then
-        self.inst:DoTaskInTime(0, function()
-            self:Activate(nil, true) -- player would be holding this item, so it can be left as nil
-            self:SetPercent(math.max(0, data.time_left))
-        end)
+        self.time_left = math.max(0, math.min(self.total_time, data.time_left))
     end
 end
 

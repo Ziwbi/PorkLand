@@ -15,8 +15,8 @@ function PlayerHud:CreateOverlays(owner, ...)
     self.poisonover = self.overlayroot:AddChild(PoisonOver(owner))
 
     self.livingartifactover = self.overlayroot:AddChild(LivingArtifactOver(owner))
-    self.inst:ListenForEvent("livingartifactoveron", function(inst, data) self.livingartifactover:UpdateState(data) end, self.owner)
-    self.inst:ListenForEvent("livingartifactoveroff", function(inst, data) self.livingartifactover:UpdateState(data) end, self.owner)
+    self.inst:ListenForEvent("livingartifactoveron", function(inst, data) self.livingartifactover:TurnOn() end, self.owner)
+    self.inst:ListenForEvent("livingartifactoveroff", function(inst, data) self.livingartifactover:TurnOff() end, self.owner)
     self.inst:ListenForEvent("livingartifactoverpulse", function(inst, data) self.livingartifactover:Flash(data) end, self.owner)
 
     self.fogover = self.overlayroot:AddChild(FogOver(owner))

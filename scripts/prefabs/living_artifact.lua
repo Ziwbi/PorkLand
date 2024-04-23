@@ -33,10 +33,34 @@ local function LoadPlayerData(player, data)
     -- player.components.vision:CheckForGlasses()
 end
 
+local function drop_inventory_items(player)
+    local self = player.components.inventory
+    if self.activeitem then
+        self:DropItem(self.activeitem, true, true)
+        self:SetActiveItem(nil)
+    end
+
+    for k = 1, self.maxslots do
+        local v = self.itemslots[k]
+        if v and not (ondeath and v.components.inventoryitem.keepondeath) then
+            self:DropItem(v, true, true)
+        end
+    end
+
+        -- if self.inst.EmptyBeard ~= nil then
+        --     self.inst:EmptyBeard()
+        -- end
+
+    for k, v in pairs(self.equipslots) do
+        self:DropItem(v, true, true)
+    end
+end
+
 local function BecomeIronLord_post(inst)
     inst.player.components.skinner:SetSkinName("", nil, true)
     inst.player.components.skinner:ClearAllClothing()
     inst.player.AnimState:SetBuild("living_suit_build")
+    inst.player.AnimState:AddOverrideBuild("living_suit_build") -- override Wanda & Wolfgang's symbols
 
     local controller_mode = TheInput:ControllerAttached()
     if controller_mode and inst.components.reticule and not inst.components.reticule.reticule then
@@ -59,7 +83,8 @@ local function BecomeIronLord(inst, instant)
     player:AddTag("laser_immune")
     player:AddTag("mech")
 
-    player:DoTaskInTime(0, function()
+    player:DoTaskInTime(0, function() -- wait for player_classified to be constructed
+        player.player_classified.instantironlord:set(true)
         player.player_classified.isironlord:set(true)
     end)
 
@@ -131,6 +156,10 @@ local function BecomeIronLord(inst, instant)
         end)
     else
         BecomeIronLord_post(inst)
+        inst:StartUpdatingComponent(inst.components.livingartifact)
+        inst.player.components.inventory.ignoresound = true -- hacky
+        inst.player.components.inventory:GiveItem(inst)
+        inst.player.components.inventory.ignoresound = false
     end
 end
 
@@ -142,6 +171,7 @@ local function Revert(inst)
 
     LoadPlayerData(player, inst.player_data)
 
+    player.AnimState:ClearOverrideBuild("living_suit_build")
     player.AnimState:SetBank("wilson")
     player.AnimState:Show("beard")
 
@@ -188,12 +218,15 @@ end
 
 local function OnActivate(inst, player, instant)
     if instant then -- OnLoad
-        inst:AddTag("enabled")
         inst.player = inst.components.inventoryitem:GetGrandOwner()
-        inst:ListenForEvent("revert", function() Revert(inst) end, player)
-        inst.player.components.inventory:GiveItem(inst)
+        if not inst.player then
+            return
+        end
+
+        inst:AddTag("enabled")
+        inst:ListenForEvent("revert", function() Revert(inst) end, inst.player)
         BecomeIronLord(inst, true)
-        print("BecomeIronLord_post")
+        inst.player.components.inventory:GiveItem(inst)
         return
     end
 
@@ -238,17 +271,14 @@ local function OnSave(inst, data)
 end
 
 local function OnLoad(inst, data)
-    if data.enabled then
+    if data and data.enabled then
         inst:Hide()
         inst.player_data = data.player_data
+        inst:DoTaskInTime(0, function()
+            inst.components.livingartifact:Activate(nil, true)
+        end)
     end
 end
-
--- local function OnLoadPostPass(inst, newents, data)
---     if data and data.enabled then
-
---     end
--- end
 
 local function fn()
     local inst = CreateEntity()
@@ -290,7 +320,6 @@ local function fn()
 
     inst.OnSave = OnSave
     inst.OnLoad = OnLoad
-    -- inst.OnLoadPostPass = OnLoadPostPass
 
     return inst
 end

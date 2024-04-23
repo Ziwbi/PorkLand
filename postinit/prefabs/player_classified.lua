@@ -141,11 +141,17 @@ local function OnIronlordDirty(inst)
 
     if inst.isironlord:value() then
         TheWorld:PushEvent("enabledynamicmusic", false)
-        player:DoTaskInTime(152 * FRAMES, function() -- 152 frames delay is for transform animation & sfx
+        if inst.instantironlord then -- in case of loading
             if not TheFocalPoint.SoundEmitter:PlayingSound("ironlordmusic") then
                 TheFocalPoint.SoundEmitter:PlaySound("dontstarve_DLC003/music/fight_epic_4", "ironlordmusic")
             end
-        end)
+        else
+            player:DoTaskInTime(152 * FRAMES, function() -- 152 frames delay is for transform animation & sfx
+                if not TheFocalPoint.SoundEmitter:PlayingSound("ironlordmusic") then
+                    TheFocalPoint.SoundEmitter:PlaySound("dontstarve_DLC003/music/fight_epic_4", "ironlordmusic")
+                end
+            end)
+        end
 
         player:PushEvent("livingartifactoveron")
 
@@ -198,8 +204,9 @@ local function RegisterNetListeners(inst)
     if not TheNet:IsDedicated() then
         inst.isironlord:set_local(false)
         inst:ListenForEvent("ironlorddirty", OnIronlordDirty)
-        inst.ironlordtimeleft:set(0)
+        inst.ironlordtimeleft:set_local(0)
         inst:ListenForEvent("ironlordtimedirty", OnIronlordTimeDirty)
+        inst.instantironlord:set_local(false)
     end
 
     inst:ListenForEvent("ironlorddirty", OverrideAction)
@@ -211,6 +218,7 @@ AddPrefabPostInit("player_classified", function(inst)
 
     inst.isironlord = inst.isironlord or net_bool(inst.GUID, "livingartifact.isironlord", "ironlorddirty")
     inst.ironlordtimeleft = inst.ironlordtimeleft or net_float(inst.GUID, "livingartifact.ironlordtimeleft", "ironlordtimedirty")
+    inst.instantironlord = inst.instant_ironlord or net_bool(inst.GUID, "livingartifact.instantironlord") -- just a flag
 
     inst:DoTaskInTime(0, RegisterNetListeners)
 end)
