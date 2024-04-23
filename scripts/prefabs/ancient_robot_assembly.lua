@@ -12,48 +12,48 @@ local prefabs =
 }
 
 local function RefreshBuild(inst)
-    local anim = inst.AnimState
+    local AnimState = inst.AnimState
     if inst.components.mechassembly.parts.LEG == 0 then
-        anim:Hide("leg01")
-        anim:Hide("leg02")
+        AnimState:Hide("leg01")
+        AnimState:Hide("leg02")
     elseif inst.components.mechassembly.parts.LEG == 1 then
-        anim:Show("leg01")
-        anim:Hide("leg02")
+        AnimState:Show("leg01")
+        AnimState:Hide("leg02")
     else
-        anim:Show("leg01")
-        anim:Show("leg02")
+        AnimState:Show("leg01")
+        AnimState:Show("leg02")
     end
     if inst.components.mechassembly.parts.CLAW == 0 then
-        anim:Hide("arm01")
-        anim:Hide("arm02")
+        AnimState:Hide("arm01")
+        AnimState:Hide("arm02")
     elseif inst.components.mechassembly.parts.CLAW == 1 then
-        anim:Show("arm01")
-        anim:Hide("arm02")
+        AnimState:Show("arm01")
+        AnimState:Hide("arm02")
     else
-        anim:Show("arm01")
-        anim:Show("arm02")
+        AnimState:Show("arm01")
+        AnimState:Show("arm02")
     end
     if inst.components.mechassembly.parts.HEAD == 0 then
-        anim:Hide("head")
+        AnimState:Hide("head")
     else
-        anim:Show("head")
+        AnimState:Show("head")
     end
     if inst.components.mechassembly.parts.RIBS == 0 then
-        anim:Hide("spine")
+        AnimState:Hide("spine")
     else
-        anim:Show("spine")
+        AnimState:Show("spine")
     end
     if inst.components.mechassembly.parts.RIBS == 1 and inst.components.mechassembly.parts.HEAD == 1 then
-        anim:Show("spine_head")
+        AnimState:Show("spine_head")
     else
-        anim:Hide("spine_head")
+        AnimState:Hide("spine_head")
     end
 end
 
 local function OnAssemble(inst)
     RefreshBuild(inst)
     inst.AnimState:PlayAnimation("merge")
-    inst.AnimState:PushAnimation("idle",true)
+    inst.AnimState:PushAnimation("idle", true)
     local pos = Vector3(inst.Transform:GetWorldPosition())
     TheWorld:PushEvent("ms_sendlightningstrike", pos)
     SpawnPrefab("ancient_hulk_laserhit"):SetTarget(inst)

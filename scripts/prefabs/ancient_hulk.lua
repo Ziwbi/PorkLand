@@ -122,7 +122,7 @@ local function PushMusic(inst)
         inst._playingmusic = false
     elseif ThePlayer:IsNear(inst, inst._playingmusic and 40 or 20) then
         inst._playingmusic = true
-        ThePlayer:PushEvent("triggeredevent", {name ="ancient_hulk"})
+        ThePlayer:PushEvent("triggeredevent", {name = "ancient_hulk"})
     elseif inst._playingmusic and not ThePlayer:IsNear(inst, 50) then
         inst._playingmusic = false
     end
@@ -305,6 +305,7 @@ local function MineOnLoad(inst, data)
         inst.components.creatureprox:SetDist(3.5, 5)
         inst.components.creatureprox:SetOnNear(OnNearMine)
         inst.components.creatureprox:SetFindTestFn(MineTestFn)
+        inst.components.creatureprox:Schedule()
     end
 end
 

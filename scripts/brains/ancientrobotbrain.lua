@@ -77,10 +77,6 @@ local function DoJumpAttack(inst)
 end
 
 local function ShouldAssemble(inst)
-    -- if inst.sg:HasStateTag("busy") then
-    --     return false
-    -- end
-
     local x, y, z = inst.Transform:GetWorldPosition()
     local ents = TheSim:FindEntities(x, y, z, ASSEMBLE_DIST, {'ancient_robot'})
     local mergetarget = nil

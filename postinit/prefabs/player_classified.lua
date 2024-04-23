@@ -135,9 +135,9 @@ end
 
 local function OnIronlordDirty(inst)
     local player = inst._parent
-    if not player or not player:IsValid() then
-        return
-    end
+    -- if not player or not player:IsValid() then
+    --     return
+    -- end
 
     if inst.isironlord:value() then
         TheWorld:PushEvent("enabledynamicmusic", false)

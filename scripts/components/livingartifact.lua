@@ -68,7 +68,7 @@ end
 function LivingArtifact:OnLoad(data)
     if data and data.active then
         self.inst:DoTaskInTime(0, function()
-            self:Activate(self.inst.player, true)
+            self:Activate(nil, true) -- player would be holding this item, so it can be left as nil
             self:SetPercent(math.max(0, data.time_left))
         end)
     end

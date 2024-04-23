@@ -34,7 +34,6 @@ local function LoadPlayerData(player, data)
 end
 
 local function BecomeIronLord_post(inst)
-    inst.entity:SetParent(inst.player.entity)
     inst.player.components.skinner:SetSkinName("", nil, true)
     inst.player.components.skinner:ClearAllClothing()
     inst.player.AnimState:SetBuild("living_suit_build")
@@ -60,7 +59,9 @@ local function BecomeIronLord(inst, instant)
     player:AddTag("laser_immune")
     player:AddTag("mech")
 
-    player.player_classified.isironlord:set(true)
+    player:DoTaskInTime(0, function()
+        player.player_classified.isironlord:set(true)
+    end)
 
     player.components.combat:SetDefaultDamage(TUNING.IRON_LORD_DAMAGE)
 
@@ -186,6 +187,16 @@ local function Revert(inst)
 end
 
 local function OnActivate(inst, player, instant)
+    if instant then -- OnLoad
+        inst:AddTag("enabled")
+        inst.player = inst.components.inventoryitem:GetGrandOwner()
+        inst:ListenForEvent("revert", function() Revert(inst) end, player)
+        inst.player.components.inventory:GiveItem(inst)
+        BecomeIronLord(inst, true)
+        print("BecomeIronLord_post")
+        return
+    end
+
     if player.components.inventory:FindItem(function(item) if inst == item then return true end end) then
         player.components.inventory:RemoveItem(inst)
         local x, y, z = player.Transform:GetWorldPosition()
@@ -199,13 +210,16 @@ local function OnActivate(inst, player, instant)
     inst:ListenForEvent("animover", function()
         if inst.AnimState:IsCurrentAnimation("activate") then
             inst:Hide()
+            inst.player.components.inventory.ignoresound = true -- hacky
+            inst.player.components.inventory:GiveItem(inst)
+            inst.player.components.inventory.ignoresound = false
         end
     end)
 
     inst:ListenForEvent("ironlord_morph_complete", function() BecomeIronLord_post(inst) end, player)
     inst:ListenForEvent("revert", function() Revert(inst) end, player)
 
-    BecomeIronLord(inst, instant)
+    BecomeIronLord(inst, false)
 end
 
 local function OnFinished(inst)
@@ -219,31 +233,22 @@ end
 local function OnSave(inst, data)
     if inst:HasTag("enabled") then
         data.enabled = true
-    end
-
-    if inst.player_data then
-        data.player_data = deepcopy(inst.player_data)
-        data.playerID = inst.player.GUID
-        return {inst.player.GUID}
+        data.player_data = inst.player_data
     end
 end
 
 local function OnLoad(inst, data)
     if data.enabled then
         inst:Hide()
-    end
-
-    if data.player_data then
         inst.player_data = data.player_data
     end
 end
 
-local function OnLoadPostPass(inst, newents, data)
-    if data and data.playerID then
-        inst.player = newents[data.playerID].entity
-        inst.player.AnimState:Hide("beard")
-    end
-end
+-- local function OnLoadPostPass(inst, newents, data)
+--     if data and data.enabled then
+
+--     end
+-- end
 
 local function fn()
     local inst = CreateEntity()
@@ -285,7 +290,7 @@ local function fn()
 
     inst.OnSave = OnSave
     inst.OnLoad = OnLoad
-    inst.OnLoadPostPass = OnLoadPostPass
+    -- inst.OnLoadPostPass = OnLoadPostPass
 
     return inst
 end
