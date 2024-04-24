@@ -13,6 +13,7 @@ local PL_ACTIONS = {
     MOUNTDUNG = Action({}),
     ASSEMBLE_ROBOT = Action({}),
     CHARGE_UP = Action({priority = 2, rmb = true, distance = 36}),
+    CHARGE_RELEASE = Action({priority = 2, rmb = true, distance = 36}),
     USE_LIVING_ARTIFACT = Action({priority = 2, invalid_hold_action = true, mount_enabled = false, rmb = true})
 }
 

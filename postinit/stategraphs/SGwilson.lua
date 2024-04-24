@@ -16,17 +16,13 @@ local function shoot(inst, is_full_charge)
     local offset = Vector3(radius * math.cos( angle ), 0, -radius * math.sin( angle ))
     local newpt = pt+offset
 
-    if is_full_charge then
+    if is_full_charge and inst.sg.mem.shootpos then
         local beam = SpawnPrefab("ancient_hulk_orb")
         beam.AnimState:PlayAnimation("spin_loop", true)
         beam.Transform:SetPosition(newpt.x, newpt.y, newpt.z)
         beam.owner = player
 
-        local targetpos = TheInput:GetWorldPosition()
-        local controller_mode = TheInput:ControllerAttached()
-        if controller_mode then
-            targetpos = Vector3(player.player_classified.livingartifact:value().components.reticule.reticule.Transform:GetWorldPosition())
-        end
+        local targetpos = inst.sg.mem.shootpos
 
         beam.components.pl_complexprojectile:SetHorizontalSpeed(60)
         beam.components.pl_complexprojectile:SetGravity(-1)
@@ -41,6 +37,7 @@ local function shoot(inst, is_full_charge)
         beam.components.combat.proxy = inst
         beam.owner = player
     end
+    inst:ClearBufferedAction()
 end
 
 local actionhandlers = {
@@ -69,6 +66,13 @@ local actionhandlers = {
     end),
     ActionHandler(ACTIONS.USE_LIVING_ARTIFACT, "give"),
     ActionHandler(ACTIONS.CHARGE_UP, "ironlord_charge"),
+    ActionHandler(ACTIONS.CHARGE_RELEASE, function(inst, action)
+        if inst.sg:HasStateTag("strafing") then
+            inst.sg.statemem.should_shoot = true
+            inst.sg.mem.shootpos = action:GetActionPoint()
+            print("OnRemoteReleaseControlSecondary")
+        end
+    end),
 }
 
 local eventhandlers = {
@@ -552,7 +556,7 @@ local states = {
 
     State {
         name = "ironlord_morph",
-        tags = {"busy"},
+        tags = {"busy", "nopredict"},
 
         onenter = function(inst)
             inst.components.locomotor:StopMoving()
@@ -624,7 +628,7 @@ local states = {
 
     State{
         name = "ironlord_charge",
-        tags = {"busy", "doing"},
+        tags = {"busy", "doing", "strafing"},
 
         onenter = function(inst)
             inst.components.locomotor:Stop()
@@ -634,29 +638,21 @@ local states = {
 
             inst.sg.statemem.ready_to_shoot = false
             inst.sg.statemem.should_shoot = false
+
+            inst.components.locomotor:StartStrafing()
         end,
 
         onexit = function(inst)
             inst:ClearBufferedAction()
+
+            inst.components.locomotor:StopStrafing()
         end,
 
         onupdate = function(inst)
-            if not inst.components.playercontroller:IsControlPressed(CONTROL_SECONDARY) then
-                inst.sg.statemem.should_shoot = true
-            end
             if inst.sg.statemem.should_shoot and inst.sg.statemem.ready_to_shoot then
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/common/crafted/iron_lord/smallshot", {timeoffset = math.random()})
                 inst.SoundEmitter:KillSound("chargedup")
                 inst.sg:GoToState("ironlord_shoot", false)
-            end
-
-            local controller_mode = TheInput:ControllerAttached()
-            if controller_mode then
-                local reticulepos = Vector3(inst.livingartifact.components.reticule.reticule.Transform:GetWorldPosition())
-                inst:ForceFacePoint(reticulepos)
-            else
-                local mousepos = TheInput:GetWorldPosition()
-                inst:ForceFacePoint(mousepos)
             end
         end,
 
@@ -669,7 +665,7 @@ local states = {
 
     State{
         name = "ironlord_charge_full",
-        tags = {"busy", "doing"},
+        tags = {"busy", "doing", "strafing"},
 
         onenter = function(inst)
             inst.components.locomotor:Stop()
@@ -679,30 +675,22 @@ local states = {
 
             inst.sg.statemem.ready_to_shoot = false
             inst.sg.statemem.should_shoot = false
+
+            inst.components.locomotor:StartStrafing()
         end,
 
         onexit = function(inst)
             inst:ClearBufferedAction()
             inst.SoundEmitter:KillSound("chargedup")
+
+            inst.components.locomotor:StopStrafing()
         end,
 
         onupdate = function(inst)
-            if not inst.components.playercontroller:IsControlPressed(CONTROL_SECONDARY) then
-                inst.sg.statemem.should_shoot = true
-            end
             if inst.sg.statemem.should_shoot and inst.sg.statemem.ready_to_shoot then
                 inst.SoundEmitter:PlaySoundWithParams("dontstarve_DLC003/creatures/boss/hulk_metal_robot/laser",  {intensity = math.random(0.7, 1)})
 
                 inst.sg:GoToState("ironlord_shoot", true)
-            end
-
-            local controller_mode = TheInput:ControllerAttached()
-            if controller_mode then
-                local reticulepos = Vector3(inst.livingartifact.components.reticule.reticule.Transform:GetWorldPosition())
-                inst:ForceFacePoint(reticulepos)
-            else
-                local mousepos = TheInput:GetWorldPosition()
-                inst:ForceFacePoint(mousepos)
             end
         end,
 
@@ -724,6 +712,10 @@ local states = {
                 inst.AnimState:PlayAnimation("charge_pst")
             end
             inst.sg.statemem.is_full_charge = is_full_charge
+
+            if inst.sg.mem.shootpos ~= nil then
+                inst:ForceFacePoint(inst.sg.mem.shootpos:Get())
+            end
         end,
 
         timeline =

@@ -25,6 +25,7 @@ local component_posts = {
     "shard_clock",
     "shard_seasons",
     "sleeper",
+    "strafer",
     "waterproofer",
     "wavemanager",
     "worldstate",
