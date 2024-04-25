@@ -11,6 +11,8 @@ local PL_ACTIONS = {
     PEAGAWK_TRANSFORM = Action({}),
     DIGDUNG = Action({mount_enabled = true}),
     MOUNTDUNG = Action({}),
+    BARK = Action({distance = 3}),
+    RANSACK = Action({distance = 0.5}),
 }
 
 for name, ACTION in pairs(PL_ACTIONS) do
@@ -126,6 +128,14 @@ ACTIONS.MOUNTDUNG.validfn = function(act)
     if act.doer and act.target and act.doer:IsValid() and act.target:IsValid() then
         return not act.doer:HasTag("hasdung") and act.target:HasTag("dungball")
     end
+end
+
+ACTIONS.BARK.fn = function(act)
+    return true
+end
+
+ACTIONS.RANSACK.fn = function(act)
+    return true
 end
 
 

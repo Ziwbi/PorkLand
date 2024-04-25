@@ -38,6 +38,7 @@ PrefabFiles = {
     "pl_foodbuffs",
     "peagawkfeather",
     "poisonbubble",
+    "pog",
     "porkland_network",
     "porkland",
     "pugalisk_fountain",

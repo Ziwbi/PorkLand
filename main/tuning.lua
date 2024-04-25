@@ -220,6 +220,25 @@ local tuning = {
     PUGALISK_ENABLED = true,
 
     PUGALISK_RUINS_PILLAR_WORK = 3,
+
+    POG_ATTACK_RANGE = 3,
+    POG_MELEE_RANGE = 2.5,
+    POG_TARGET_DIST = 25,
+    POG_WALK_SPEED = 2,
+    POG_RUN_SPEED = 4.5,
+    POG_DAMAGE = 25,
+    POG_HEALTH = 150,
+    POG_ATTACK_PERIOD = 2,
+
+    MIN_POGNAP_INTERVAL = 30,
+    MAX_POGNAP_INTERVAL = 120,
+    MIN_POGNAP_LENGTH = 20,
+    MAX_POGNAP_LENGTH = 40,
+
+    POG_LOYALTY_MAXTIME = total_day_time,
+    POG_LOYALTY_PER_ITEM = total_day_time * 0.1,
+    POG_EAT_DELAY = 0.5,
+    POG_SEE_FOOD = 30,
 }
 
 for key, value in pairs(tuning) do
