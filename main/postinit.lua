@@ -34,6 +34,7 @@ local prefab_posts = {
     "buff_workeffectiveness",
     "player",
     "player_classified",
+    "pocketdimensioncontainer_defs",
     "woodie",
     "world_network",
     "shard_network",

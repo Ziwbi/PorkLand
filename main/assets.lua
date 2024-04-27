@@ -32,6 +32,7 @@ PrefabFiles = {
     "peagawk",
     -- "peagawk_spawner",
     "piko",
+    "pl_chests",
     "pl_planted_tree",
     "pl_preparedfoods",
     "pl_veggies",

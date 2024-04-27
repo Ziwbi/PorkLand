@@ -10,7 +10,7 @@ local prefabs =
 
 }
 
-SetSharedLootTable( "pog",
+SetSharedLootTable("pog",
 {
     {"smallmeat",             1.00},
 })
@@ -121,7 +121,7 @@ local function OnAporkalypse(inst, isaporkalypse)
     if isaporkalypse then
         inst.AnimState:SetBuild("pog_feral_build")
     else
-        inst.AnimState:SetBuild("pog_basic")
+        inst.AnimState:SetBuild("pog_actions")
     end
 end
 
