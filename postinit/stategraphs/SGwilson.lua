@@ -43,7 +43,7 @@ end
 local actionhandlers = {
     ActionHandler(ACTIONS.HACK, function(inst)
         if inst:HasTag("ironlord") then
-            return not inst.sg:HasStateTag("working") and "ironlord_work" or nil
+            return not inst.sg:HasStateTag("punchworking") and "ironlord_work" or nil
         end
         if inst:HasTag("beaver") then
             return not inst.sg:HasStateTag("gnawing") and "gnaw" or nil
@@ -586,7 +586,7 @@ local states = {
 
     State{
         name = "ironlord_work",
-        tags = {"busy", "working"},
+        tags = {"prepunchwork", "punchworking", "working"},
 
         onenter = function(inst)
             inst.components.locomotor:Stop()
@@ -598,7 +598,7 @@ local states = {
         {
             TimeEvent(8  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch", nil, 0.5) end),
             TimeEvent(6  * FRAMES, function(inst) inst:PerformBufferedAction() end),
-            TimeEvent(14 * FRAMES, function(inst) inst.sg:RemoveStateTag("working") inst.sg:RemoveStateTag("busy") inst.sg:AddStateTag("idle") end),
+            TimeEvent(14 * FRAMES, function(inst) inst.sg:RemoveStateTag("working") inst.sg:RemoveStateTag("busy") end),
             TimeEvent(15 * FRAMES, function(inst)
                 if inst.components.playercontroller and
                     inst.components.playercontroller:IsAnyOfControlsPressed(CONTROL_PRIMARY, CONTROL_ACTION, CONTROL_CONTROLLER_ACTION) and
@@ -791,31 +791,27 @@ local states = {
 
     State{
         name = "ironlord_attack",
-        tags = {"attack", "busy"},
+        tags = {"attack", "abouttoattack"},
 
         onenter = function(inst, target)
             inst.components.locomotor:StopMoving()
             inst.AnimState:PlayAnimation("power_punch")
             inst.components.combat:StartAttack()
             inst.sg.statemem.target = target
-
-            local cooldown = math.max(inst.components.combat.min_attack_period, 13 * FRAMES)
-            inst.sg:SetTimeout(cooldown)
         end,
 
         timeline =
         {
             TimeEvent(0  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch_pre") end),
-            TimeEvent(8  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch") inst:PerformBufferedAction() end),
-            TimeEvent(14 * FRAMES, function(inst) inst.sg:RemoveStateTag("attack") inst.sg:RemoveStateTag("busy") inst.sg:AddStateTag("idle") end),
+            TimeEvent(8  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch") end),
+            TimeEvent(9 * FRAMES, function(inst) inst:PerformBufferedAction() inst.sg:RemoveStateTag("abouttoattack") end),
+            TimeEvent(13 * FRAMES, function(inst) inst.sg:RemoveStateTag("attack") inst.sg:AddStateTag("idle") end),
         },
 
         events =
         {
             EventHandler("animover", function(inst)
-                if inst.AnimState:AnimDone() then
-                    inst.sg:GoToState("ironlord_idle")
-                end
+                inst.sg:GoToState("ironlord_idle")
             end),
         },
     },
@@ -834,114 +830,140 @@ for _, state in ipairs(states) do
 end
 
 AddStategraphPostInit("wilson", function(sg)
-    local _attack_deststate = sg.actionhandlers[ACTIONS.ATTACK].deststate
-    sg.actionhandlers[ACTIONS.ATTACK].deststate = function(inst, ...)
-        if inst:HasTag("ironlord") then
-            return "ironlord_attack"
-        end
-        if not inst.sg:HasStateTag("sneeze") then
-            return _attack_deststate and _attack_deststate(inst, ...)
+    do
+        local _attack_deststate = sg.actionhandlers[ACTIONS.ATTACK].deststate
+        sg.actionhandlers[ACTIONS.ATTACK].deststate = function(inst, ...)
+            if inst:HasTag("ironlord") then
+                return "ironlord_attack"
+            end
+            if not inst.sg:HasStateTag("sneeze") then
+                return _attack_deststate and _attack_deststate(inst, ...)
+            end
         end
     end
 
-    local _idle_onenter = sg.states["idle"].onenter
-    sg.states["idle"].onenter = function(inst, ...)
-        if not (inst.components.drownable ~= nil and inst.components.drownable:ShouldDrown()) then
-            if inst.sg.wantstosneeze then
-                inst.components.locomotor:Stop()
-                inst.components.locomotor:Clear()
+    do
+        local _idle_onenter = sg.states["idle"].onenter
+        sg.states["idle"].onenter = function(inst, ...)
+            if inst:HasTag("ironlord") then
+                inst.sg:GoToState("ironlord_idle")
+                return
+            end
+            if not (inst.components.drownable ~= nil and inst.components.drownable:ShouldDrown()) then
+                if inst.sg.wantstosneeze then
+                    inst.components.locomotor:Stop()
+                    inst.components.locomotor:Clear()
 
+                    inst.sg:GoToState("sneeze")
+                    return
+                end
+            end
+
+            if _idle_onenter ~= nil then
+                return _idle_onenter(inst, ...)
+            end
+        end
+    end
+
+    do
+        local _mounted_idle_onenter = sg.states["mounted_idle"].onenter
+        sg.states["mounted_idle"].onenter = function(inst, ...)
+            if inst.sg.wantstosneeze then
                 inst.sg:GoToState("sneeze")
                 return
             end
-        end
 
-        if _idle_onenter ~= nil then
-            return _idle_onenter(inst, ...)
-        end
-    end
-
-    local _mounted_idle_onenter = sg.states["mounted_idle"].onenter
-    sg.states["mounted_idle"].onenter = function(inst, ...)
-        if inst.sg.wantstosneeze then
-            inst.sg:GoToState("sneeze")
-            return
-        end
-
-        local equippedArmor = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.BODY)
-        if (equippedArmor ~= nil and equippedArmor:HasTag("band")) or
-            not (inst.components.poisonable and inst.components.poisonable:IsPoisoned()) then
-            if _mounted_idle_onenter ~= nil then
-                return _mounted_idle_onenter(inst, ...)
+            local equippedArmor = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.BODY)
+            if (equippedArmor ~= nil and equippedArmor:HasTag("band")) or
+                not (inst.components.poisonable and inst.components.poisonable:IsPoisoned()) then
+                if _mounted_idle_onenter ~= nil then
+                    return _mounted_idle_onenter(inst, ...)
+                end
+            else
+                inst.sg:GoToState("mounted_poison_idle")
             end
-        else
-            inst.sg:GoToState("mounted_poison_idle")
         end
     end
 
-    local _funnyidle_onenter = sg.states["funnyidle"].onenter
-    sg.states["funnyidle"].onenter = function(inst, ...)
-        if inst.components.poisonable and inst.components.poisonable:IsPoisoned() then
-            inst.AnimState:PlayAnimation("idle_poison_pre")
-            inst.AnimState:PushAnimation("idle_poison_loop")
-            inst.AnimState:PushAnimation("idle_poison_pst", false)
-        elseif _funnyidle_onenter then
-            _funnyidle_onenter(inst, ...)
+    do
+        local _funnyidle_onenter = sg.states["funnyidle"].onenter
+        sg.states["funnyidle"].onenter = function(inst, ...)
+            if inst.components.poisonable and inst.components.poisonable:IsPoisoned() then
+                inst.AnimState:PlayAnimation("idle_poison_pre")
+                inst.AnimState:PushAnimation("idle_poison_loop")
+                inst.AnimState:PushAnimation("idle_poison_pst", false)
+            elseif _funnyidle_onenter then
+                _funnyidle_onenter(inst, ...)
+            end
         end
     end
 
-    local _castspell_deststate = sg.actionhandlers[ACTIONS.CASTSPELL].deststate
-    sg.actionhandlers[ACTIONS.CASTSPELL].deststate = function(inst, action)
-        local staff = action.invobject or action.doer.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
-        if staff:HasTag("bonestaff") then
-            return "castspell_bone"
-        else
-            return _castspell_deststate and _castspell_deststate(inst, action)
+    do
+        local _castspell_deststate = sg.actionhandlers[ACTIONS.CASTSPELL].deststate
+        sg.actionhandlers[ACTIONS.CASTSPELL].deststate = function(inst, action)
+            local staff = action.invobject or action.doer.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+            if staff:HasTag("bonestaff") then
+                return "castspell_bone"
+            else
+                return _castspell_deststate and _castspell_deststate(inst, action)
+            end
         end
     end
 
-    local _chop_deststate = sg.actionhandlers[ACTIONS.CHOP].deststate
-    sg.actionhandlers[ACTIONS.CHOP].deststate = function(inst, action)
-        if inst:HasTag("ironlord") then
-            return "ironlord_work"
-        else
-            return _chop_deststate(inst, action)
+    do
+        local _chop_deststate = sg.actionhandlers[ACTIONS.CHOP].deststate
+        sg.actionhandlers[ACTIONS.CHOP].deststate = function(inst, action)
+            if inst:HasTag("ironlord") then
+                return "ironlord_work"
+            else
+                return _chop_deststate and _chop_deststate(inst, action)
+            end
         end
     end
 
-    local _mine_deststate = sg.actionhandlers[ACTIONS.MINE].deststate
-    sg.actionhandlers[ACTIONS.MINE].deststate = function(inst, action)
-        if inst:HasTag("ironlord") then
-            return "ironlord_work"
-        else
-            return _mine_deststate(inst, action)
+    do
+        local _mine_deststate = sg.actionhandlers[ACTIONS.MINE].deststate
+        sg.actionhandlers[ACTIONS.MINE].deststate = function(inst, action)
+            if inst:HasTag("ironlord") then
+                return "ironlord_work"
+            else
+                return _mine_deststate and _mine_deststate(inst, action)
+            end
         end
     end
 
-    local _dig_deststate = sg.actionhandlers[ACTIONS.DIG].deststate
-    sg.actionhandlers[ACTIONS.DIG].deststate = function(inst, action)
-        if inst:HasTag("ironlord") then
-            return "ironlord_work"
-        else
-            return _dig_deststate(inst, action)
+    do
+        local _dig_deststate = sg.actionhandlers[ACTIONS.DIG].deststate
+        sg.actionhandlers[ACTIONS.DIG].deststate = function(inst, action)
+            if inst:HasTag("ironlord") then
+                return "ironlord_work"
+            else
+                return _dig_deststate and _dig_deststate(inst, action)
+            end
         end
     end
 
-    local _hammer_deststate = sg.actionhandlers[ACTIONS.HAMMER].deststate
-    sg.actionhandlers[ACTIONS.HAMMER].deststate = function(inst, action)
-        if inst:HasTag("ironlord") then
-            return "ironlord_work"
-        else
-            return _hammer_deststate(inst, action)
+    do
+        local _hammer_deststate = sg.actionhandlers[ACTIONS.HAMMER].deststate
+        sg.actionhandlers[ACTIONS.HAMMER].deststate = function(inst, action)
+            if inst:HasTag("ironlord") then
+                return "ironlord_work"
+            else
+                return _hammer_deststate and _hammer_deststate(inst, action)
+            end
         end
     end
 
-    local _attacked_handler_fn = sg.events["attacked"].fn
-    sg.events["attacked"] = EventHandler("attacked", function(inst, data)
-        if inst:HasTag("ironlord") then
-            inst.sg:GoToState("ironlord_hit")
-        else
-            _attacked_handler_fn(inst, data)
-        end
-    end)
+    do
+        local _attacked_handler_fn = sg.events["attacked"].fn
+        sg.events["attacked"] = EventHandler("attacked", function(inst, data)
+            if inst:HasTag("ironlord") then
+                if inst.sg.currentstate.name == "idle" or inst.sg.currentstate.name == "ironlord_idle" then
+                    inst.sg:GoToState("ironlord_hit")
+                end
+            else
+                _attacked_handler_fn(inst, data)
+            end
+        end)
+    end
 end)
