@@ -803,8 +803,10 @@ local states = {
         timeline =
         {
             TimeEvent(0  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch_pre") end),
-            TimeEvent(8  * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch") end),
-            TimeEvent(9 * FRAMES, function(inst) inst:PerformBufferedAction() inst.sg:RemoveStateTag("abouttoattack") end),
+            TimeEvent(8  * FRAMES, function(inst)
+                inst.SoundEmitter:PlaySound("dontstarve_DLC003/common/crafted/iron_lord/punch")
+                inst:PerformBufferedAction()
+                inst.sg:RemoveStateTag("abouttoattack") end),
             TimeEvent(13 * FRAMES, function(inst) inst.sg:RemoveStateTag("attack") inst.sg:AddStateTag("idle") end),
         },
 
