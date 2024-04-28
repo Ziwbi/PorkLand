@@ -57,13 +57,15 @@ local function OnClose(inst)
 end
 
 local function OnHammered(inst, worker)
-    if inst.components.burnable ~= nil and inst.components.burnable:IsBurning() then
+    if inst.components.burnable and inst.components.burnable:IsBurning() then
         inst.components.burnable:Extinguish()
     end
+
     inst.components.lootdropper:DropLoot()
-    if inst.components.container ~= nil then
+    if inst.components.container then
         inst.components.container:DropEverything()
     end
+
     local fx = SpawnPrefab("collapse_small")
     fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
     fx:SetMaterial("wood")
@@ -72,7 +74,7 @@ end
 
 local function OnHit(inst, worker)
     if not inst:HasTag("burnt") then
-        if inst.components.container ~= nil then
+        if inst.components.container then
             inst.components.container:DropEverything()
             inst.components.container:Close()
         end
@@ -83,7 +85,7 @@ end
 
 local function OnBuilt(inst)
     inst.AnimState:PlayAnimation("place")
-    inst.AnimState:PushAnimation("closed", false) -- ds uses true..?
+    inst.AnimState:PushAnimation("closed", false)
 
     inst.SoundEmitter:PlaySound(inst.skin_place_sound or inst.place_sound or "dontstarve/common/chest_craft")
 end
@@ -185,7 +187,7 @@ local function LoadHoneyFirstTime(inst)
         return
     end
     for index = 1, inst.components.container.numslots do
-        inst.components.container:GiveItem(SpawnPrefab("honey"), index, Vector3(inst.Transform:GetWorldPosition()))
+        inst.components.container:GiveItem(SpawnPrefab("honey"), index)
     end
     inst.spawned = true
 end
@@ -228,14 +230,12 @@ local function ant_perish_rate_multiplier(inst, item)
     end
 end
 
-local function ant_common_postinit(inst)
-    inst.open_sound = "dontstarve_DLC003/common/objects/honey_chest/open"
-    inst.close_sound = "dontstarve_DLC003/common/objects/honey_chest/open"
-end
-
 local function ant_master_postinit(inst)
     inst:AddComponent("preserver")
     inst.components.preserver:SetPerishRateMultiplier(ant_perish_rate_multiplier)
+
+    inst.open_sound = "dontstarve_DLC003/common/objects/honey_chest/open"
+    inst.close_sound = "dontstarve_DLC003/common/objects/honey_chest/open"
 
     inst.OnSave = AntOnSave
     inst.OnLoad = AntOnLoad
@@ -250,7 +250,9 @@ end
 
 local function cork_common_postinit(inst)
     inst:AddTag("pogproof")
+end
 
+local function cork_master_postinit(inst)
     inst.open_sound = "dontstarve_DLC003/common/crafted/cork_chest/open"
     inst.close_sound = "dontstarve_DLC003/common/crafted/cork_chest/close"
     inst.plcae_sound = "dontstarve_DLC003/common/crafted/cork_chest/place"
@@ -282,10 +284,6 @@ local function roottrunk_fn()
 
 	inst:AddComponent("container_proxy")
 
-    inst.open_sound = "dontstarve_DLC003/common/crafted/root_trunk/open"
-    inst.close_sound = "dontstarve_DLC003/common/crafted/root_trunk/open"
-    inst.place_sound = "dontstarve_DLC003/common/crafted/root_trunk/place"
-
     inst.entity:SetPristine()
 
     if not TheWorld.ismastersim then
@@ -313,6 +311,10 @@ local function roottrunk_fn()
 
     inst:ListenForEvent("onbuilt", OnBuilt)
 
+    inst.open_sound = "dontstarve_DLC003/common/crafted/root_trunk/open"
+    inst.close_sound = "dontstarve_DLC003/common/crafted/root_trunk/open"
+    inst.place_sound = "dontstarve_DLC003/common/crafted/root_trunk/place"
+
     inst.OnSave = OnSave
     inst.OnLoad = OnLoad
 	inst.OnLoadPostPass = AttachRootContainer
@@ -324,9 +326,8 @@ local function roottrunk_fn()
     return inst
 end
 
-
-return MakeChest("antchest", "ant_chest", "ant_chest", false, ant_master_postinit, prefabs_ant, assets_ant, ant_common_postinit, false),
-       MakeChest("corkchest", "treasure_chest_cork", "treasure_chest_cork", false, nil, prefabs_cork, assets_cork, cork_common_postinit, false),
+return MakeChest("antchest", "ant_chest", "ant_chest", false, ant_master_postinit, prefabs_ant, assets_ant, nil, false),
+       MakeChest("corkchest", "treasure_chest_cork", "treasure_chest_cork", false, cork_master_postinit, prefabs_cork, assets_cork, cork_common_postinit, false),
        Prefab("roottrunk", roottrunk_fn, assets_root, prefabs_root),
        MakePlacer("corkchest_placer", "chest", "treasure_chest_cork", "closed"),
        MakePlacer("roottrunk_placer", "roottrunk", "treasure_chest_roottrunk", "closed")

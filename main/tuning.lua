@@ -223,7 +223,6 @@ local tuning = {
 
     POG_ATTACK_RANGE = 3,
     POG_MELEE_RANGE = 2.5,
-    POG_TARGET_DIST = 25,
     POG_WALK_SPEED = 2,
     POG_RUN_SPEED = 4.5,
     POG_DAMAGE = 25,
@@ -238,7 +237,6 @@ local tuning = {
     POG_LOYALTY_MAXTIME = total_day_time,
     POG_LOYALTY_PER_ITEM = total_day_time * 0.1,
     POG_EAT_DELAY = 0.5,
-    POG_SEE_FOOD = 30,
 }
 
 for key, value in pairs(tuning) do

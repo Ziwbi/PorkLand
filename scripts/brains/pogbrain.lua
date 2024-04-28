@@ -10,7 +10,7 @@ local BrainCommon = require("brains/braincommon")
 local EAT_FOOD_DIST = 30
 
 local MAX_CHASE_TIME = 4
-local MAX_CHASE_DIST = 10
+local MAX_CHASE_DIST = 25
 
 local MIN_FOLLOW_DIST = 0
 local MAX_FOLLOW_DIST = 12
@@ -34,7 +34,7 @@ local RANSACK_NO_TAGS = {"pogproof", "aquatic", "fire", "smolder", "bundle"}
 
 local POG_TAGS = {"pog"}
 
-local BRAK_AT_ONE_OF_TAGS = {"pog","pogproof"}
+local BRAK_AT_ONE_OF_TAGS = {"pog", "pogproof"}
 
 local function EatFoodAction(inst)
     local target = inst.components.inventory:FindItem(function(item) return inst.components.eater:CanEat(item) end)
@@ -47,14 +47,12 @@ local function EatFoodAction(inst)
         end, nil, EAT_FOOD_NO_TAGS)
 
         local x, y, z = inst.Transform:GetWorldPosition()
-        local ents = TheSim:FindEntities(x, y, z, TUNING.POG_SEE_FOOD, POG_TAGS)
+        local ents = TheSim:FindEntities(x, y, z, EAT_FOOD_DIST, POG_TAGS)
 
         for _, ent in pairs(ents)do
             -- if another nearby pog is already going to this food, maybe go after it?
-            -- questionable
             if ((ent.components.locomotor.bufferedaction and ent.components.locomotor.bufferedaction.target and ent.components.locomotor.bufferedaction.target == target) or
-                (inst.bufferedaction and inst.bufferedaction.target and inst.bufferedaction.target == target) )
-                and ent ~= inst then
+                (inst.bufferedaction and inst.bufferedaction.target and inst.bufferedaction.target == target)) and ent ~= inst then
                 if math.random() < 0.9 then
                     return nil
                 end
@@ -64,13 +62,6 @@ local function EatFoodAction(inst)
 
     if target then
         return BufferedAction(inst, target, ACTIONS.EAT)
-    end
-end
-
-local function SuggestTarget(inst)
-    local player = FindClosestPlayerInRange(inst, 15, true)
-    if player then
-        inst.components.combat:SuggestTarget(player)
     end
 end
 
@@ -88,7 +79,7 @@ local function DoRansack(inst)
     if next(containers) then
         local container = containers[math.random(1, #containers)]
 
-        local items = container.components.container:FindItems(function() return true end) -- a potential brain logic error
+        local items = container.components.container:GetAllItems()
         if next(items) then
             return BufferedAction(inst, container, ACTIONS.RANSACK)
         end
@@ -156,9 +147,6 @@ function PogBrain:OnStart()
 
         DoAction(self.inst, function() return EatFoodAction(self.inst) end, "Eat", true),
 
-        IfNode(function() return TheWorld.state.isaporkalypse end, "AporkalypseActive",
-            DoAction(self.inst, function() SuggestTarget(self.inst) end)),
-
         ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST),
 
         DoAction(self.inst, function() return DoRansack(self.inst) end, "ransack", true),
@@ -171,7 +159,7 @@ function PogBrain:OnStart()
 
         DoAction(self.inst, function() return DoBark(self.inst) end, "Bark at friend", true),
 
-        Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("herd") end, GetWanderDistFn)
+        Wander(self.inst, nil, GetWanderDistFn)
     }, 0.25)
 
     self.bt = BT(self.inst, root)

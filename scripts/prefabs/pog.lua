@@ -7,7 +7,7 @@ local assets =
 
 local prefabs =
 {
-
+    "smallmeat"
 }
 
 SetSharedLootTable("pog",
@@ -26,10 +26,8 @@ local function OnAttacked(inst, data)
 end
 
 local function KeepTargetFn(inst, target)
-    return (target
-        and target.components.combat
-        and target.components.health
-        and not target.components.health:IsDead()
+    return (target and target.components.combat
+        and (target.components.health and not target.components.health:IsDead())
         and (not target:HasTag("pog") or not (inst.components.follower and inst.components.follower:IsLeaderSame(target)))
         and not (inst.components.follower and inst.components.follower.leader == target))
 end
@@ -39,12 +37,17 @@ local RETARGET_NO_TAGS = {"FX", "NOCLICK","INLIMBO", "wall", "pog", "structure"}
 local RETARGET_ONE_OF_TASG = {"monster", "smallcreature"}
 
 local function RetargetFn(inst)
+    if TheWorld.state.isaporkalypse then
+        local x, y, z = inst.Transform:GetWorldPosition()
+        local player = FindClosestPlayerInRange(x, y, z, 15, true)
+        if player then
+            return player
+        end
+    end
+
     return FindEntity(inst, RETARGET_DIST, function(ent)
-        return 	(ent.components.health and not ent.components.health:IsDead() and inst.components.combat:CanTarget(ent) and
-                not (inst.components.follower and inst.components.follower.leader ~= nil and ent:HasTag("abigail"))) and
-                not (inst.components.follower and inst.components.follower:IsLeaderSame(ent)) and
-                -- TODO optimise this line
-                not (inst.components.follower and ent.components.follower and inst.components.follower.leader ~= nil and ent.components.follower.leader and ent.components.follower.leader.components.inventoryitem and ent.components.follower.leader.components.inventoryitem.owner and inst.components.follower.leader == ent.components.follower.leader.components.inventoryitem.owner)
+        return 	(ent.components.health and not ent.components.health:IsDead() and inst.components.combat:CanTarget(ent))
+            and not (inst.components.follower and inst.components.follower:IsLeaderSame(ent))
         end, nil, RETARGET_NO_TAGS, RETARGET_ONE_OF_TASG)
 end
 
@@ -105,7 +108,6 @@ local function OnGetItemFromPlayer(inst, giver, item)
             inst.components.follower:AddLoyaltyTime(TUNING.POG_LOYALTY_PER_ITEM)
         end
     end
-
 end
 
 local function OnRefuseItem(inst, giver, item)
@@ -178,13 +180,9 @@ local function fn()
     inst:AddComponent("health")
     inst.components.health:SetMaxHealth(TUNING.POG_HEALTH)
 
-    inst:AddComponent("herdmember")
-
     inst:AddComponent("inspectable")
 
     inst:AddComponent("inventory")
-
-    inst:AddComponent("knownlocations")
 
     inst:AddComponent("locomotor")
     inst.components.locomotor.walkspeed = TUNING.POG_WALK_SPEED
