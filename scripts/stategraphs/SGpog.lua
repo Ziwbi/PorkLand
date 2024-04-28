@@ -29,7 +29,7 @@ local events =
 local EAT_FOOD_DIST = 30
 local EAT_FOOD_NO_TAGS = {"FX", "NOCLICK", "DECOR", "INLIMBO", "poisonous"}
 local function can_ransack(inst, target)
-    if not target or not target:IsValid() or not target.components.container then
+    if not target or not target:IsValid() or not (target.components.container or target.components.container_proxy) then
         return false
     end
 
@@ -37,24 +37,31 @@ local function can_ransack(inst, target)
         return inst.components.eater:CanEat(item)
             and item:IsOnValidGround()
             and item:GetTimeAlive() > TUNING.POG_EAT_DELAY
+            and item.components.inventoryitem.is_landed
     end, nil, EAT_FOOD_NO_TAGS)
 
-    if not target.components.container:IsEmpty() and not food_on_ground then
-        return true
+    if food_on_ground then
+        return false
     end
 
-    return false
+    if target.components.container_proxy then
+        return not target.components.container_proxy:GetMaster().components.container:IsEmpty()
+    end
+
+    return not target.components.container:IsEmpty()
 end
 
 local function toss_items(inst, target)
-    if not target or not target:IsValid() or not target.components.container then
+    if not target or not target:IsValid() or not (target.components.container or target.components.container_proxy) then
         return
     end
 
-    local items = target.components.container:GetAllItems()
+    local container = target.components.container_proxy and target.components.container_proxy:GetMaster() or target
+
+    local items = container.components.container:GetAllItems()
     if next(items) then
         local item = items[math.random(1,#items)]
-        target.components.container:RemoveItem(item)
+        container.components.container:RemoveItem(item)
 
         local x, y, z = target.Transform:GetWorldPosition()
         item.Transform:SetPosition(x, 1, z)
@@ -260,9 +267,14 @@ local states =
                 else
                     inst.AnimState:PlayAnimation("rummage_loop")
                     inst.sg.statemem.ransack_target = act.target
+                    local contaner = act.target.components.container_proxy and act.target.components.container_proxy:GetMaster() or act.target
 
                     act.target:AddTag("pogged")
-                    act.target.components.container:Open(act.doer)
+                    if act.target.components.container_proxy then
+                        act.target.components.container_proxy:Open(inst)
+                    else
+                        act.target.components.container:Open(inst)
+                    end
                 end
             end
         end,
@@ -280,7 +292,11 @@ local states =
 
         onexit = function(inst)
             if inst.sg.statemem.ransack_target and not inst.keepransacking then
-                inst.sg.statemem.ransack_target.components.container:Close()
+                if inst.sg.statemem.ransack_target.components.container_proxy then
+                    inst.sg.statemem.ransack_target.components.container_proxy:Close(inst)
+                else
+                    inst.sg.statemem.ransack_target.components.container:Close()
+                end
                 inst.sg.statemem.ransack_target:RemoveTag("pogged")
             end
             inst.keepransacking = nil
@@ -313,7 +329,11 @@ local states =
 
         onexit = function(inst)
             if not inst.keepransacking then
-                inst.sg.statemem.ransack_target.components.container:Close()
+                if inst.sg.statemem.ransack_target.components.container_proxy then
+                    inst.sg.statemem.ransack_target.components.container_proxy:Close(inst)
+                else
+                    inst.sg.statemem.ransack_target.components.container:Close()
+                end
             end
             if inst.sg.statemem.ransack_target then
                 inst.sg.statemem.ransack_target:RemoveTag("pogged")
@@ -382,7 +402,6 @@ local states =
             end),
         },
     },
-
 
     State{
         name = "bark_at_friend",

@@ -71,7 +71,7 @@ local function DoRansack(inst)
 
     local containers = {}
     for _, ent in pairs(ents) do
-        if ent.components.container then
+        if ent.components.container or ent.components.container_proxy then
             containers[#containers + 1] = ent
         end
     end
@@ -79,7 +79,8 @@ local function DoRansack(inst)
     if next(containers) then
         local container = containers[math.random(1, #containers)]
 
-        local items = container.components.container:GetAllItems()
+        local master = container.components.container_proxy and container.components.container_proxy:GetMaster() or container
+        local items = master.components.container:GetAllItems()
         if next(items) then
             return BufferedAction(inst, container, ACTIONS.RANSACK)
         end

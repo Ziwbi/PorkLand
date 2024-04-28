@@ -85,5 +85,5 @@ params["corkchest"] = widget_corkchest
 
 params["roottrunk"] = deepcopy(params["shadowchester"])
 function params.roottrunk.itemtestfn(container, item, slot)
-    return not item:HasTag("irreplaceable")
+    return not item:HasTag("irreplaceable") and not item.components.leader
 end
