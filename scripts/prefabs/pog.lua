@@ -180,9 +180,14 @@ local function fn()
     inst:AddComponent("health")
     inst.components.health:SetMaxHealth(TUNING.POG_HEALTH)
 
+    inst:AddComponent("herdmember")
+    inst.components.herdmember:SetHerdPrefab("pogherd")
+
     inst:AddComponent("inspectable")
 
     inst:AddComponent("inventory")
+
+	inst:AddComponent("knownlocations")
 
     inst:AddComponent("locomotor")
     inst.components.locomotor.walkspeed = TUNING.POG_WALK_SPEED

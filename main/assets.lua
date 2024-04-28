@@ -42,6 +42,7 @@ PrefabFiles = {
     "peagawkfeather",
     "poisonbubble",
     "pog",
+    "pogherd",
     "porkland_network",
     "porkland",
     "pugalisk_fountain",

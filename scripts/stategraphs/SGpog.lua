@@ -37,7 +37,6 @@ local function can_ransack(inst, target)
         return inst.components.eater:CanEat(item)
             and item:IsOnValidGround()
             and item:GetTimeAlive() > TUNING.POG_EAT_DELAY
-            and item.components.inventoryitem.is_landed
     end, nil, EAT_FOOD_NO_TAGS)
 
     if food_on_ground then

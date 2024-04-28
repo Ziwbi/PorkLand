@@ -29,8 +29,9 @@ local BARK_CHANCE_POG_PROOF = 0.05
 
 local EAT_FOOD_NO_TAGS = {"FX", "NOCLICK", "DECOR", "INLIMBO", "poisonous"}
 
-local RANSACK_MUST_TAGS = {"structure"}
+local RANSACK_MUST_TAGS = {"_container"}
 local RANSACK_NO_TAGS = {"pogproof", "aquatic", "fire", "smolder", "bundle"}
+local RANSACK_ONE_OF_TAGS = {"structure", "portablestorage"}
 
 local POG_TAGS = {"pog"}
 
@@ -67,7 +68,7 @@ end
 
 local function DoRansack(inst)
     local x, y, z = inst.Transform:GetWorldPosition()
-    local ents = TheSim:FindEntities(x, y, z, EAT_FOOD_DIST, RANSACK_MUST_TAGS, RANSACK_NO_TAGS)
+    local ents = TheSim:FindEntities(x, y, z, EAT_FOOD_DIST, RANSACK_MUST_TAGS, RANSACK_NO_TAGS, RANSACK_ONE_OF_TAGS)
 
     local containers = {}
     for _, ent in pairs(ents) do
@@ -80,6 +81,10 @@ local function DoRansack(inst)
         local container = containers[math.random(1, #containers)]
 
         local master = container.components.container_proxy and container.components.container_proxy:GetMaster() or container
+        if not master.components.container.canbeopened then
+            return
+        end
+
         local items = master.components.container:GetAllItems()
         if next(items) then
             return BufferedAction(inst, container, ACTIONS.RANSACK)
@@ -146,7 +151,8 @@ function PogBrain:OnStart()
     local root = PriorityNode({
         BrainCommon.PanicTrigger(self.inst),
 
-        DoAction(self.inst, function() return EatFoodAction(self.inst) end, "Eat", true),
+        WhileNode(function() return not self.inst.sg:HasStateTag("preoccupied") end, "Should eat",
+            DoAction(self.inst, function() return EatFoodAction(self.inst) end, "Eat", true)),
 
         ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST),
 
@@ -160,7 +166,7 @@ function PogBrain:OnStart()
 
         DoAction(self.inst, function() return DoBark(self.inst) end, "Bark at friend", true),
 
-        Wander(self.inst, nil, GetWanderDistFn)
+        Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("herd") end, GetWanderDistFn)
     }, 0.25)
 
     self.bt = BT(self.inst, root)

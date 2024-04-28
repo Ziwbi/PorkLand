@@ -62,7 +62,5 @@ AddRecipe2("corkchest", {Ingredient("cork", 2), Ingredient("rope", 1)}, TECH.SCI
 SortBefore("corkchest", "treasurechest", "CONTAINERS")
 SortBefore("corkchest", "treasurechest", "STRUCTURES")
 AddRecipe2("roottrunk", {Ingredient("bramble_bulb", 1), Ingredient("venus_stalk", 2),Ingredient("boards", 3)}, TECH.MAGIC_TWO, {placer = "roottrunk_placer"}, {"CONTAINERS", "MAGIC"})
-SortAfter("roottrunk", "dragonflychest", "CONTAINERS")
 SortBefore("roottrunk", "magician_chest", "CONTAINERS")
-SortAfter("roottrunk", "antlionhat", "MAGIC")
 SortBefore("roottrunk", "purplegem", "MAGIC")
