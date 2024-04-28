@@ -59,8 +59,8 @@ local function toss_items(inst, target)
 
     local items = container.components.container:GetAllItems()
     if next(items) then
-        local item = items[math.random(1,#items)]
-        container.components.container:RemoveItem(item)
+        local item = items[math.random(1, #items)]
+        item = container.components.container:RemoveItem(item)
 
         local x, y, z = target.Transform:GetWorldPosition()
         item.Transform:SetPosition(x, 1, z)
@@ -328,11 +328,13 @@ local states =
         },
 
         onexit = function(inst)
-            if inst.sg.statemem.ransack_target and inst.sg.statemem.ransack_target:IsValid() and not inst.keepransacking then
-                if inst.sg.statemem.ransack_target.components.container_proxy then
-                    inst.sg.statemem.ransack_target.components.container_proxy:Close(inst)
-                else
-                    inst.sg.statemem.ransack_target.components.container:Close()
+            if inst.sg.statemem.ransack_target and inst.sg.statemem.ransack_target:IsValid() then
+                if not inst.keepransacking then
+                    if inst.sg.statemem.ransack_target.components.container_proxy then
+                        inst.sg.statemem.ransack_target.components.container_proxy:Close(inst)
+                    else
+                        inst.sg.statemem.ransack_target.components.container:Close()
+                    end
                 end
                 inst.sg.statemem.ransack_target:RemoveTag("pogged")
             end

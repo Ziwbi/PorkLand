@@ -154,6 +154,35 @@ function ACTIONS.FERTILIZE.fn(act, ...)
     end
 end
 
+local _PICKUPfn = ACTIONS.PICKUP.fn
+function ACTIONS.PICKUP.fn(act, ...)
+    if act.target and act.target:HasTag("portablestorage")
+        and act.target.components.inventoryitem
+        and act.target.components.inventoryitem.canbepickedup then
+        local inuse = false
+        for ent in pairs(act.target.components.container.openlist) do
+            if ent ~= act.doer and not ent:HasTag("pog") then
+                inuse = true
+                break
+            end
+        end
+        if inuse then
+            return false, "INUSE"
+        end
+
+        if act.target.components.inventory ~= nil and act.target:HasTag("drop_inventory_onpickup") then
+            act.target.components.inventory:TransferInventory(act.doer)
+        end
+
+        act.doer:PushEvent("onpickupitem", {item = act.target})
+        act.doer.components.inventory:GiveItem(act.target, nil, act.target:GetPosition())
+        return true
+    end
+
+    return _PICKUPfn(act, ...)
+end
+
+
 local _STORE_stroverridefn = ACTIONS.STORE.stroverridefn
 function ACTIONS.STORE.stroverridefn(act, ...)
     if act.target and act.target:HasTag("smelter") then
