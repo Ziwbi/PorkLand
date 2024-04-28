@@ -266,7 +266,6 @@ local states =
                 else
                     inst.AnimState:PlayAnimation("rummage_loop")
                     inst.sg.statemem.ransack_target = act.target
-                    local contaner = act.target.components.container_proxy and act.target.components.container_proxy:GetMaster() or act.target
 
                     act.target:AddTag("pogged")
                     if act.target.components.container_proxy then
@@ -284,13 +283,15 @@ local states =
         },
 
         onupdate = function(inst)
-            if not inst:IsNear(inst.sg.statemem.ransack_target, 1.5) then
+            if not inst.sg.statemem.ransack_target
+                or not inst.sg.statemem.ransack_target:IsValid()
+                or not inst:IsNear(inst.sg.statemem.ransack_target, 1.5) then
                 inst.sg:GoToState("idle", "rummage_pst")
             end
         end,
 
         onexit = function(inst)
-            if inst.sg.statemem.ransack_target and not inst.keepransacking then
+            if inst.sg.statemem.ransack_target and inst.sg.statemem.ransack_target:IsValid() and not inst.keepransacking then
                 if inst.sg.statemem.ransack_target.components.container_proxy then
                     inst.sg.statemem.ransack_target.components.container_proxy:Close(inst)
                 else
@@ -327,14 +328,12 @@ local states =
         },
 
         onexit = function(inst)
-            if not inst.keepransacking then
+            if inst.sg.statemem.ransack_target and inst.sg.statemem.ransack_target:IsValid() and not inst.keepransacking then
                 if inst.sg.statemem.ransack_target.components.container_proxy then
                     inst.sg.statemem.ransack_target.components.container_proxy:Close(inst)
                 else
                     inst.sg.statemem.ransack_target.components.container:Close()
                 end
-            end
-            if inst.sg.statemem.ransack_target then
                 inst.sg.statemem.ransack_target:RemoveTag("pogged")
             end
             inst.keepransacking = nil

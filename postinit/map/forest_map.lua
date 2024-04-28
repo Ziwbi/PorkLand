@@ -20,6 +20,7 @@ TRANSLATE_TO_PREFABS["asparagus"] = { "asparagus_planted" }
 TRANSLATE_TO_PREFABS["dungpile"] = { "dungpile" }
 TRANSLATE_TO_PREFABS["hanging_vine_patch"] = { "hanging_vine_patch" }
 TRANSLATE_TO_PREFABS["peagawk"] = { "peagawk" }
+TRANSLATE_TO_PREFABS["pog"] = { "pog" }
 TRANSLATE_TO_PREFABS["grass_tall_patch"] = { "grass_tall_patch" }
 TRANSLATE_TO_PREFABS["grass_tall"] = { "grass_tall" }
 

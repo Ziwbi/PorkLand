@@ -29,8 +29,7 @@ local BARK_CHANCE_POG_PROOF = 0.05
 
 local EAT_FOOD_NO_TAGS = {"FX", "NOCLICK", "DECOR", "INLIMBO", "poisonous"}
 
-local RANSACK_MUST_TAGS = {"_container"}
-local RANSACK_NO_TAGS = {"pogproof", "aquatic", "fire", "smolder", "bundle"}
+local RANSACK_NO_TAGS = {"pogproof", "aquatic", "fire", "smolder", "bundle", "INLIMBO", "pocketdimension_container"}
 local RANSACK_ONE_OF_TAGS = {"structure", "portablestorage"}
 
 local POG_TAGS = {"pog"}
@@ -68,7 +67,7 @@ end
 
 local function DoRansack(inst)
     local x, y, z = inst.Transform:GetWorldPosition()
-    local ents = TheSim:FindEntities(x, y, z, EAT_FOOD_DIST, RANSACK_MUST_TAGS, RANSACK_NO_TAGS, RANSACK_ONE_OF_TAGS)
+    local ents = TheSim:FindEntities(x, y, z, EAT_FOOD_DIST, nil, RANSACK_NO_TAGS, RANSACK_ONE_OF_TAGS)
 
     local containers = {}
     for _, ent in pairs(ents) do
