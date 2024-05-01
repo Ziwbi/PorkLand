@@ -52,16 +52,10 @@ local function RetargetFn(inst)
 end
 
 local function SleepTest(inst)
-    if inst.components.follower.leader then
+    if (inst.components.follower and inst.components.follower.leader)
+        or (inst.components.combat and inst.components.combat.target)
+        or inst.components.playerprox:IsPlayerClose() then
         return false
-    end
-
-    if inst.components.playerprox:IsPlayerClose() then
-        return false
-    end
-
-    if StandardSleepChecks(inst) then
-        return true
     end
 
     if not inst.sg:HasStateTag("busy") and (not inst.last_wake_time or GetTime() - inst.last_wake_time >= inst.nap_interval) then
@@ -72,10 +66,6 @@ local function SleepTest(inst)
 end
 
 local function WakeTest(inst)
-    if StandardWakeChecks(inst) then
-        return true
-    end
-
     if not inst.last_sleep_time or GetTime() - inst.last_sleep_time >= inst.nap_length then
         inst.nap_interval = math.random(TUNING.MIN_POGNAP_INTERVAL, TUNING.MAX_POGNAP_INTERVAL)
         inst.last_wake_time = GetTime()
@@ -187,7 +177,7 @@ local function fn()
 
     inst:AddComponent("inventory")
 
-	inst:AddComponent("knownlocations")
+    inst:AddComponent("knownlocations")
 
     inst:AddComponent("locomotor")
     inst.components.locomotor.walkspeed = TUNING.POG_WALK_SPEED

@@ -33,8 +33,9 @@ local function fn()
     inst:AddComponent("tradable")
 
     inst:AddComponent("edible")
-    inst.components.edible.foodtype = "WOOD"
-    inst.components.edible.woodiness = 5
+    inst.components.edible.foodtype = FOODTYPE.WOOD
+    inst.components.edible.healthvalue = 0
+    inst.components.edible.hungervalue = 0
 
     inst:AddComponent("fuel")
     inst.components.fuel.fuelvalue = TUNING.MED_FUEL
@@ -43,6 +44,7 @@ local function fn()
     inst:AddComponent("repairer")
     inst.components.repairer.repairmaterial = MATERIALS.WOOD
     inst.components.repairer.healthrepairvalue = TUNING.REPAIR_LOGS_HEALTH
+    inst.components.repairer.boatrepairsound = "turnoftides/common/together/boat/repair_with_wood"
 
     MakeSmallBurnable(inst, TUNING.LARGE_BURNTIME)
     MakeSmallPropagator(inst)

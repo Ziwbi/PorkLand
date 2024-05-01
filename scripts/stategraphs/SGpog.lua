@@ -4,7 +4,7 @@ local actionhandlers =
 {
     ActionHandler(ACTIONS.EAT, "eat"),
     ActionHandler(ACTIONS.BARK, "bark_at_friend"),
-    ActionHandler(ACTIONS.RANSACK, "ransack_pre"),
+    ActionHandler(ACTIONS.RANSACK, "ransack"),
 }
 
 local events =

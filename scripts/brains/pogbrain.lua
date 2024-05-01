@@ -150,8 +150,7 @@ function PogBrain:OnStart()
     local root = PriorityNode({
         BrainCommon.PanicTrigger(self.inst),
 
-        WhileNode(function() return not self.inst.sg:HasStateTag("preoccupied") end, "Should eat",
-            DoAction(self.inst, function() return EatFoodAction(self.inst) end, "Eat", true)),
+        DoAction(self.inst, function() return EatFoodAction(self.inst) end, "Eat", true),
 
         ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST),
 
