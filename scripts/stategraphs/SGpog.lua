@@ -295,7 +295,7 @@ local states =
                 if inst.sg.statemem.ransack_target.components.container_proxy then
                     inst.sg.statemem.ransack_target.components.container_proxy:Close(inst)
                 else
-                    inst.sg.statemem.ransack_target.components.container:Close()
+                    inst.sg.statemem.ransack_target.components.container:Close(inst)
                 end
                 inst.sg.statemem.ransack_target:RemoveTag("pogged")
             end
@@ -333,7 +333,7 @@ local states =
                     if inst.sg.statemem.ransack_target.components.container_proxy then
                         inst.sg.statemem.ransack_target.components.container_proxy:Close(inst)
                     else
-                        inst.sg.statemem.ransack_target.components.container:Close()
+                        inst.sg.statemem.ransack_target.components.container:Close(inst)
                     end
                 end
                 inst.sg.statemem.ransack_target:RemoveTag("pogged")
