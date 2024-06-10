@@ -4,7 +4,7 @@ local actionhandlers =
 {
     ActionHandler(ACTIONS.EAT, "eat"),
     ActionHandler(ACTIONS.BARK, "bark_at_friend"),
-    ActionHandler(ACTIONS.RANSACK, "ransack"),
+    ActionHandler(ACTIONS.RANSACK, "ransack_pre"),
 }
 
 local events =
@@ -300,6 +300,7 @@ local states =
                 inst.sg.statemem.ransack_target:RemoveTag("pogged")
             end
             inst.keepransacking = nil
+            inst:ClearBufferedAction()
         end,
 
         events =
@@ -339,6 +340,7 @@ local states =
                 inst.sg.statemem.ransack_target:RemoveTag("pogged")
             end
             inst.keepransacking = nil
+            inst:ClearBufferedAction()
         end,
 
         events =

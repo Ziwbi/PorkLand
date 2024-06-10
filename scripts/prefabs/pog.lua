@@ -161,7 +161,7 @@ local function fn()
 
     inst:AddComponent("eater")
     inst.components.eater:SetCanEatHorrible()
-    inst.components.eater:SetDiet({FOODTYPE.MEAT, FOODTYPE.VEGGIE, FOODTYPE.GENERIC, FOODTYPE.INSECT, FOODTYPE.SEEDS})
+    inst.components.eater:SetDiet({FOODTYPE.MEAT, FOODTYPE.VEGGIE, FOODTYPE.GENERIC, FOODTYPE.INSECT, FOODTYPE.SEEDS, FOODTYPE.GOODIES})
     inst.components.eater:SetStrongStomach(true) -- can eat monster meat!
 
     inst:AddComponent("follower")

@@ -29,9 +29,8 @@ local BARK_CHANCE_POG_PROOF = 0.05
 
 local EAT_FOOD_NO_TAGS = {"FX", "NOCLICK", "DECOR", "INLIMBO", "poisonous"}
 
-local RANSACK_NO_TAGS = {"pogproof", "aquatic", "fire", "smolder", "bundle", "INLIMBO", "pocketdimension_container"}
+local RANSACK_NO_TAGS = {"pogproof", "aquatic", "fire", "smolder", "bundle", "INLIMBO", "pocketdimension_container", "pogged"}
 local RANSACK_ONE_OF_TAGS = {"structure", "portablestorage"}
-local RANSACK_NO_TAGS = {"pogged"}
 
 local POG_TAGS = {"pog"}
 
