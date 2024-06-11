@@ -89,6 +89,12 @@ PrefabFiles = {
     "waterdrop",
     "weevole_carapace",
     "weevole",
+
+    "light_rays",
+    "burr",
+    "rainforesttrees",
+    "scorpion",
+    "poisonmist",
 }
 
 Assets = {

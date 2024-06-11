@@ -96,6 +96,18 @@ local pl_fx = {
         anim = "boat_death",
         tintalpha = 0.5,
     },
+    {
+        name = "chop_mangrove_pink",
+        bank = "chop_mangrove",
+        build = "chop_mangrove_pink",
+        anim = "chop",
+    },
+    {
+        name = "fall_mangrove_pink",
+        bank = "chop_mangrove",
+        build = "chop_mangrove_pink",
+        anim = "fall",
+    },
 }
 
 -- Sneakily add these to the FX table

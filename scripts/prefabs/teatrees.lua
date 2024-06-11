@@ -353,7 +353,7 @@ local function OnBurntChanges(inst)
     MakeHauntableWork(inst)
     -- inst:RemoveComponent("blowinwindgust")
 
-    inst.components.lootdropper:SetChanceLootTable("palmconetree_burnt")
+    inst.components.lootdropper:SetChanceLootTable("teatree_burnt")
 
     if inst.components.workable then
         inst.components.workable:SetWorkLeft(1)
@@ -363,12 +363,7 @@ local function OnBurntChanges(inst)
 end
 
 local function OnBurnt(inst, immediate)
-    -- NOTE(ziwbi): Burnable.onburnt only accepts 1 argument actually
-    -- if immediate then
-        OnBurntChanges(inst)
-    -- else
-    --     inst:DoTaskInTime(0.5, OnBurntChanges)
-    -- end
+    OnBurntChanges(inst)
 
     inst:AddTag("burnt")
 

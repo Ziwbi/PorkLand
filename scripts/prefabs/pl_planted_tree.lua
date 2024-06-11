@@ -8,8 +8,16 @@ local teatree_nut_prefabs =
     "twigs",
 }
 
+local burr_assets = {
+    Asset("ANIM", "anim/burr.zip"),
+}
+
+local burr_prefabs = {
+    "twigs",
+}
+
 local function growtree(inst)
-    local tree = SpawnPrefab(inst.growprefab)
+    local tree = SpawnPrefab(FunctionOrValue(inst.growprefab, inst))
     if tree then
         tree.Transform:SetPosition(inst.Transform:GetWorldPosition())
         tree:growfromseed()
@@ -21,12 +29,6 @@ local function stopgrowing(inst)
     inst.components.timer:StopTimer("grow")
 end
 
-local function startgrowing(inst)
-    if not inst.components.timer:TimerExists("grow") then
-        local growtime = GetRandomWithVariance(TUNING.PINECONE_GROWTIME.base, TUNING.PINECONE_GROWTIME.random)
-        inst.components.timer:StartTimer("grow", growtime)
-    end
-end
 
 local function ontimerdone(inst, data)
     if data.name == "grow" then
@@ -39,7 +41,16 @@ local function digup(inst, digger)
     inst:Remove()
 end
 
-local function sapling_fn(build, anim, growprefab, tag, fireproof, overrideloot)
+local function sapling_fn(build, anim, growprefab, tag, fireproof, overrideloot, override_growtime)
+    local function startgrowing(inst)
+        if not inst.components.timer:TimerExists("grow") then
+            local base_time = override_growtime and override_growtime.base or TUNING.PINECONE_GROWTIME.base
+            local random_time = override_growtime and override_growtime.random or TUNING.PINECONE_GROWTIME.random
+            local growtime = GetRandomWithVariance(base_time, random_time)
+            inst.components.timer:StartTimer("grow", growtime)
+        end
+    end
+
     local function fn()
         local inst = CreateEntity()
 
@@ -100,4 +111,15 @@ local function sapling_fn(build, anim, growprefab, tag, fireproof, overrideloot)
     return fn
 end
 
-return Prefab("teatree_nut_sapling", sapling_fn("teatree_nut", "idle_planted", "teatree"), teatree_nut_assets, teatree_nut_prefabs)
+local function burr_growprefab_fn(inst)
+    local x, y, z = inst.Transform:GetWorldPosition()
+
+    if TheWorld.Map:GetTileAtPoint(x, y, z) == WORLD_TILES.GASJUNGLE then
+        return "rainforesttree_rot"
+    else
+        return "rainforesttree"
+    end
+end
+
+return Prefab("teatree_nut_sapling", sapling_fn("teatree_nut", "idle_planted", "teatree"), teatree_nut_assets, teatree_nut_prefabs),
+       Prefab("burr_sapling", sapling_fn("burr", "idle_planted", burr_growprefab_fn, nil, nil, nil, TUNING.JUNGLETREESEED_GROWTIME), burr_assets, burr_prefabs)
