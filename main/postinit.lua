@@ -153,6 +153,7 @@ modimport("postinit/minimapentity")
 modimport("postinit/sim")
 modimport("postinit/pathfinder")
 modimport("postinit/groundcreep")
+modimport("postinit/groundcreepentity")
 
 for _, file_name in ipairs(behaviour_posts) do
     modimport("postinit/behaviours/" .. file_name)
