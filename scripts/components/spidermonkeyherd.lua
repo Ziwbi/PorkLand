@@ -15,7 +15,7 @@ assert(TheWorld.ismastersim, "SpiderMonkeyHerd should not exist on client")
 
 local ADD_TO_HERD_MAX_DISTSQ = 200 * 200
 local REMOVE_FROM_HERD_DISTSQ = 220 * 220
-local CREATE_HERD_MIN_DISTSQ = 400 * 400
+local CREATE_HERD_MIN_DISTSQ = 200 * 200
 local MAX_MONKEY_PER_HERD = 6
 local FIND_NEW_TREE_DIST = 200 -- absurd...
 
