@@ -181,7 +181,7 @@ local function InfectTrees(inst, tree)
     local nearby_trees = TheSim:FindEntities(x, y, z, FIND_WEB_TREE_DIST, FIND_TREE_MUST_TAGS, FIND_TREE_NO_TAGS)
 
     for _, new_tree in pairs(nearby_trees) do
-        if new_tree ~= tree then
+        if new_tree ~= tree and not new_tree:HasTag("spider_monkey_tree") then
             local stage = new_tree.stage
             new_tree = ReplacePrefab(new_tree, "spider_monkey_tree")
             new_tree.components.growable:SetStage(stage)
@@ -231,10 +231,17 @@ local function UpdateTreeStatus(inst)
         local infected_tree = TheSim:FindEntities(x, y, z, FIND_TREE_DIST, FIND_WEB_TREE_MUST_TAGS, FIND_TREE_NO_TAGS)
         local tree
         for i, ent in ipairs(infected_tree) do
-            local other_monkey_tree = FindEntity(ent, 7, nil, {"spider_monkey_tree"}, FIND_TREE_NO_TAGS)
-            if other_monkey_tree == nil and inst:GetDistanceSqToInst(ent) <= FIND_TREE_DIST * FIND_TREE_DIST then
-                tree = ent
-                break
+            local other_monkey_tree = FindEntity(ent, 7, function(ent)
+                local other_monkey_tree = FindEntity(ent, 7, nil, {"has_spider"}, {"burnt", "stump", "rotten"})
+                return other_monkey_tree == nil
+            end, {"spider_monkey_tree"}, FIND_TREE_NO_TAGS)
+            local x, y, z = ent.Transform:GetWorldPosition()
+            local tile = TheWorld.Map:GetTileAtPoint(x, y, z)
+            if other_monkey_tree == nil
+                and inst:GetDistanceSqToInst(ent) <= FIND_TREE_DIST * FIND_TREE_DIST
+                and tile == WORLD_TILES.DEEPRAINFOREST then
+                    tree = ent
+                    break
             end
         end
 
@@ -245,8 +252,11 @@ local function UpdateTreeStatus(inst)
 
     if not inst.target_tree then -- can't find a tree next to old home or this is the first tree
         local tree = FindEntity(inst, 30, function(ent)
-            local other_monkey_tree = FindEntity(ent, 7, nil, {"has_spider", "spider_monkey_tree"}, FIND_WEB_TREE_NOT_TAGS)
-            return other_monkey_tree == nil
+            local other_monkey_tree = FindEntity(ent, 7, nil,
+                {"has_spider", "spider_monkey_tree"}, FIND_WEB_TREE_NOT_TAGS)
+            local x, y, z = ent.Transform:GetWorldPosition()
+            local tile = TheWorld.Map:GetTileAtPoint(x, y, z)
+            return other_monkey_tree == nil and tile == WORLD_TILES.DEEPRAINFOREST
         end, FIND_TREE_MUST_TAGS, FIND_TREE_NO_TAGS)
 
         if tree then
@@ -364,7 +374,7 @@ local function fn()
 
     inst:ListenForEvent("attacked", OnAttacked)
 
-    inst:DoPeriodicTask(15 + math.random() * 15, UpdateTreeStatus)
+    inst:DoPeriodicTask(0 + math.random() * 0.1, UpdateTreeStatus)
 
     inst:DoTaskInTime(0, function() TheWorld.components.spidermonkeyherd:AddToHerd(inst) end)
 
